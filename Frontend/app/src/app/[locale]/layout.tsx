@@ -8,16 +8,17 @@ export const metadata = {
 
 interface RootLayoutProps {
   children: React.ReactNode;
-  params: Promise<{ locale: 'es' | 'en' }>;
+  params: Promise<{ locale: string }>;
 }
 
 export default async function RootLayout({ children, params }: RootLayoutProps) {
   const { locale } = await params;
+  const currentLocale = (locale === 'en' ? 'en' : 'es') as 'es' | 'en';
 
   return (
-    <html lang={locale}>
+    <html lang={currentLocale}>
       <body className="flex min-h-screen bg-slate-950 text-slate-100">
-        <Sidebar currentLocale={locale} />
+        <Sidebar currentLocale={currentLocale} />
         <div className="flex-1 flex flex-col min-h-screen">
           {children}
         </div>
