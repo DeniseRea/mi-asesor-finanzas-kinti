@@ -1,5 +1,7 @@
+import type { DashboardDictionary } from '@/shared/i18n/dictionaries/dashboard';
+
 interface RevenueChartProps {
-  dict: any;
+  dict: DashboardDictionary;
 }
 
 export function RevenueChart({ dict }: RevenueChartProps) {
@@ -8,7 +10,7 @@ export function RevenueChart({ dict }: RevenueChartProps) {
 
   return (
     <div className="bg-slate-900 border border-slate-800 p-6 rounded-xl flex flex-col gap-4">
-      <span className="text-sm font-semibold text-slate-300">{dict.dashboard.revenue}</span>
+      <span className="text-sm font-semibold text-slate-300">{dict.revenue}</span>
       <div className="h-32 flex items-end gap-3 pt-4">
         {data.map((height, i) => (
           <div key={i} className="flex-1 flex flex-col items-center gap-2">

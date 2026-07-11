@@ -1,12 +1,120 @@
 @import "tailwindcss";
 
 :root {
-  --background: #090d16;
-  --foreground: #f8fafc;
+  --journey-delay: 900ms;
+}
+
+@theme {
+  --color-kinti-green-dark: #1B5E20;
+  --color-kinti-green: #2E7D32;
+  --color-kinti-green-light: #4CAF50;
+  --color-kinti-bg: #FFFFFF;
+  --color-kinti-text: #1A1A1A;
+  --color-kinti-text-light: #6B7280;
+  --color-kinti-border: #E5E7EB;
+  --color-kinti-input-bg: #F9FAFB;
+  --color-kinti-link: #2E7D32;
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+html,
+body {
+  background-color: #e7efdf;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: var(--font-sans), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@keyframes auth-panel-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(28px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes auth-hero-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes journey-line-draw {
+  from {
+    stroke-dashoffset: 1800;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes journey-step-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes journey-icon-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.auth-panel-enter {
+  animation: auth-panel-enter 350ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.auth-hero-enter {
+  animation: auth-hero-enter 450ms 70ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.journey-line {
+  stroke-dasharray: 1800;
+  stroke-dashoffset: 1800;
+  animation: journey-line-draw 1.8s 280ms cubic-bezier(0.45, 0, 0.2, 1) forwards;
+}
+
+.journey-step {
+  opacity: 0;
+  animation: journey-step-enter 240ms var(--journey-delay, 900ms) ease-out forwards;
+}
+
+.journey-step > span:first-child {
+  animation: journey-icon-pop 480ms var(--journey-delay, 900ms) cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-panel-enter,
+  .auth-hero-enter,
+  .journey-line,
+  .journey-step,
+  .journey-step > span:first-child {
+    animation: none;
+    opacity: 1;
+    stroke-dashoffset: 0;
+    transform: none;
+  }
 }

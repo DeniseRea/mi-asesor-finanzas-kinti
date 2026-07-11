@@ -1,5 +1,11 @@
 import './globals.css';
-import { Sidebar } from '@/widgets/Sidebar/components/Sidebar';
+import { Inter } from 'next/font/google';
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+});
 
 export const metadata = {
   title: 'Kinti - Mi Asesor de Finanzas',
@@ -16,12 +22,9 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
   const currentLocale = (locale === 'en' ? 'en' : 'es') as 'es' | 'en';
 
   return (
-    <html lang={currentLocale}>
-      <body className="flex min-h-screen bg-slate-950 text-slate-100">
-        <Sidebar currentLocale={currentLocale} />
-        <div className="flex-1 flex flex-col min-h-screen">
-          {children}
-        </div>
+    <html lang={currentLocale} className={inter.variable}>
+      <body>
+        {children}
       </body>
     </html>
   );

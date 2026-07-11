@@ -1,7 +1,6 @@
 'use client';
 
 import { UserAvatar } from '@entities/user/components/UserAvatar';
-import { Button } from '@shared/components/Button';
 import Link from 'next/link';
 
 interface SidebarProps {
