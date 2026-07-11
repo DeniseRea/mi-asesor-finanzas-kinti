@@ -20,8 +20,7 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@_app/*": ["./src/_app/*"],
-      "@_pages/*": ["./src/_pages/*"],
+      "@pageviews/*": ["./src/pageviews/*"],
       "@widgets/*": ["./src/widgets/*"],
       "@features/*": ["./src/features/*"],
       "@entities/*": ["./src/entities/*"],

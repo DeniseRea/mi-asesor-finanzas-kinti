@@ -1,7 +1,0 @@
-@import "tailwindcss";
-
-/* Personalizaciones o variables globales si fueran necesarias */
-:root {
-  --background: #0f172a; /* Slate 900 por defecto */
-  --foreground: #f8fafc; /* Slate 50 por defecto */
-}
