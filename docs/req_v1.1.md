@@ -1,8 +1,15 @@
-# Requisitos Funcionales v1.1
+# Requisitos Funcionales v1.2
 
 **Proyecto:** Hackathon de Agentes Financieros IA - Track 2
 **Fecha:** Julio 2026
 **Estado:** Borrador - Pendiente de definición en equipo
+
+### Changelog v1.2
+
+- RF-02 y RF-03 actualizados para clarificar responsabilidades entre n8n (Denise) y backend.
+- Se eliminaron flujos de interpretación de lenguaje natural del backend (los maneja n8n).
+- Se agregaron endpoints `/webhook` para que n8n envíe JSON interpretado al backend.
+- Se renumeraron los pendientes (P-5 a P-19).
 
 ---
 
@@ -79,7 +86,14 @@ El usuario puede crear una cuenta, iniciar sesión y completar su perfil para ac
 
 ### Descripción
 
-El usuario puede registrar ingresos y gastos mediante lenguaje natural, ya sea por WhatsApp (bot) o por la app web (chat equivalente). El sistema interpreta el mensaje, extrae los datos de la transacción y solicita confirmación antes de guardar.
+El usuario puede registrar ingresos y gastos mediante lenguaje natural por WhatsApp o por la app web. La interpretación del mensaje la realiza **n8n (Denise)** usando un proveedor de IA. El **backend** solo recibe el JSON ya interpretado y lo guarda en la base de datos.
+
+### Responsabilidades
+
+| Componente | Responsabilidad |
+|---|---|
+| **n8n (Denise)** | Recibe mensaje de WhatsApp, resuelve usuario por teléfono, llama al proveedor de IA, interpreta el mensaje, muestra confirmación al usuario, envía JSON al backend |
+| **Backend (Julio)** | Recibe JSON interpretado de n8n, guarda transacciones, lista transacciones, genera resumen de ingresos/gastos/saldo, maneja importación CSV |
 
 ### Precondiciones
 
@@ -88,77 +102,144 @@ El usuario puede registrar ingresos y gastos mediante lenguaje natural, ya sea p
 
 ### Flujos
 
-#### Flujo 1: Registro por mensaje de texto (WhatsApp o Web)
+#### Flujo 1: Registro por WhatsApp (n8n → Backend)
 
 1. El usuario envía un mensaje en lenguaje natural, ej: "gasté 25 dólares en comida".
-2. El agente interpreta el mensaje y extrae:
+2. **n8n** recibe el mensaje y resuelve el `usuario_id` por número de teléfono.
+3. **n8n** envía el mensaje al proveedor de IA.
+4. El proveedor de IA interpreta y retorna un JSON con:
     - **Acción:** INGRESO o GASTO
     - **Monto:** numérico
     - **Categoría:** comida, transporte, salud, etc.
     - **Entidad/Comercio:** opcional
     - **Fecha:** si no se menciona, usa la fecha actual.
-3. El agente responde con los datos interpretados y pide confirmación.
-4. El usuario confirma o corrige.
-5. Se guarda la transacción.
-6. Se muestra un resumen actualizado (ingresos, gastos, saldo).
+5. **n8n** muestra al usuario los datos interpretados y pide confirmación.
+6. El usuario confirma o corrige.
+7. **n8n** envía `POST /api/transactions/webhook` al backend con el JSON confirmado.
+8. **Backend** guarda la transacción y retorna confirmación.
+9. **n8n** responde al usuario con un resumen actualizado (ingresos, gastos, saldo).
 
-**Estructura de entrada:**
-
-```json
-{
-  "usuario_id": "12345",
-  "mensaje": "Quiero registrar un gasto de 10 dólares"
-}
-```
-
-**Estructura de salida:**
+**JSON que n8n envía al backend:**
 
 ```json
 {
+  "usuario_id": "uuid-del-usuario",
   "accion": "GASTO",
-  "datos": {
-    "monto": 50.00,
-    "categoria": "Acciones",
-    "entidad": "Apple",
-    "fecha": "2026-07-11"
-  },
-  "respuesta_chat": "¡Excelente! He registrado tu inversión de $50 en Apple. ¡A multiplicar ese dinero!"
+  "monto": 25.00,
+  "categoria": "comida",
+  "entidad": "restaurante",
+  "fecha": "2026-07-11"
 }
 ```
 
-#### Flujo 2: Registro por CSV bancario
+**Respuesta del backend:**
 
-1. El usuario sube un archivo CSV con transacciones.
-2. El sistema valida el formato y muestra una vista previa.
-3. El usuario confirma o edita las transacciones antes de importar.
-4. Se guardan todas las transacciones validadas.
+```json
+{
+  "id": "uuid-transaccion",
+  "usuario_id": "uuid-del-usuario",
+  "accion": "GASTO",
+  "monto": 25.00,
+  "categoria": "comida",
+  "entidad": "restaurante",
+  "fecha": "2026-07-11",
+  "confirmado": true,
+  "created_at": "2026-07-11T15:30:00Z"
+}
+```
 
-#### Flujo 3: Validación de usuario por WhatsApp
+#### Flujo 2: Registro por la app web
+
+1. El usuario escribe un mensaje en el chat de la app web.
+2. El frontend envía el mensaje a **n8n** (mismo flujo que WhatsApp).
+3. **n8n** interpreta, retorna JSON, el usuario confirma.
+4. **n8n** envía el JSON al backend (`POST /api/transactions/webhook`).
+5. **Backend** guarda y retorna confirmación.
+
+#### Flujo 3: Registro manual por la app web (sin n8n)
+
+1. El usuario completa un formulario manual (monto, categoría, fecha, etc.).
+2. El frontend envía `POST /api/transactions` directamente al backend.
+3. **Backend** guarda y retorna confirmación.
+
+**JSON que el frontend envía al backend:**
+
+```json
+{
+  "usuario_id": "uuid-del-usuario",
+  "accion": "GASTO",
+  "monto": 50.00,
+  "categoria": "Acciones",
+  "entidad": "Apple",
+  "fecha": "2026-07-11"
+}
+```
+
+#### Flujo 4: Resumen de transacciones
+
+1. El frontend o n8n solicitan `GET /api/transactions/summary?usuario_id=xxx`.
+2. **Backend** retorna:
+
+```json
+{
+  "usuario_id": "uuid-del-usuario",
+  "moneda": "USD",
+  "total_ingresos": 3500.00,
+  "total_gastos": 1250.00,
+  "saldo": 2250.00,
+  "periodo": {
+    "mes": 7,
+    "anio": 2026
+  }
+}
+```
+
+#### Flujo 5: Importación CSV (solo app web)
+
+1. El usuario sube un archivo CSV desde la app web.
+2. El frontend envía el CSV a `POST /api/transactions/csv`.
+3. **Backend** parsea, valida y retorna vista previa.
+4. El usuario confirma.
+5. **Backend** guarda todas las transacciones validadas.
+
+#### Flujo 6: Validación de usuario por WhatsApp (n8n)
 
 1. Un número desconocido envía un mensaje al bot.
-2. El bot responde indicando que no tiene registro del número y muestra un link de registro.
-3. El usuario se registra y vincula su número.
-4. A partir de ahí, el bot reconoce al usuario.
+2. **n8n** responde indicando que no tiene registro del número y muestra un link de registro.
+3. El usuario se registra en la app web y vincula su número.
+4. A partir de ahí, **n8n** reconoce al usuario por su teléfono.
+
+> **Nota:** Este flujo lo maneja completamente n8n. El backend no participa.
+
+### Endpoints del backend
+
+| Método | Ruta | Descripción | Origen |
+|---|---|---|---|
+| `POST` | `/api/transactions/webhook` | Recibe JSON de n8n y guarda transacción | n8n |
+| `POST` | `/api/transactions` | Crear transacción manual (formulario web) | Frontend |
+| `GET` | `/api/transactions` | Listar transacciones del usuario | Frontend |
+| `GET` | `/api/transactions/summary` | Resumen ingresos/gastos/saldo | Frontend / n8n |
+| `POST` | `/api/transactions/csv` | Importar CSV (vista previa) | Frontend |
+| `POST` | `/api/transactions/csv/confirm` | Confirmar importación CSV | Frontend |
+| `DELETE` | `/api/transactions/:id` | Eliminar transacción | Frontend |
 
 ### Criterios de aceptación
 
-- [ ] El agente interpreta mensajes en lenguaje natural y extrae monto, categoría, entidad y fecha.
-- [ ] El agente pide confirmación cuando falta información o hay ambigüedad.
+- [ ] n8n puede enviar transacciones al backend vía `POST /api/transactions/webhook`.
+- [ ] El frontend puede crear transacciones manuales vía `POST /api/transactions`.
 - [ ] Se guardan transacciones de tipo INGRESO y GASTO.
-- [ ] El resumen de ingresos/gastos/saldo se actualiza correctamente.
-- [ ] El usuario no registrado por WhatsApp recibe un link de registro.
-- [ ] El CSV se puede subir por WhatsApp y por la app web.
+- [ ] El resumen de ingresos/gastos/saldo se calcula correctamente.
 - [ ] La importación CSV muestra vista previa antes de confirmar.
+- [ ] Se pueden listar transacciones con filtros (tipo, categoría, fecha).
 
 ### Pendientes
 
 | # | Pregunta | Opciones posibles |
 |---|---|---|
 | P-5 | ¿Formato exacto del CSV bancario? | Estándar del banco / Formato propio a definir |
-| P-6 | ¿Cómo se envía el CSV por WhatsApp? | Archivo adjunto en el chat / Link a página de upload |
-| P-7 | ¿Límite de transacciones por CSV? | Sin límite / Máx 100 / Máx 500 |
-| P-8 | ¿Qué pasa si el CSV tiene filas con errores? | Saltar filas erróneas / Rechazar todo / Mostrar resumen de errores |
-| P-9 | ¿Categorías predefinidas o el usuario crea las suyas? | Lista fija / Usuario crea / Mixto |
+| P-6 | ¿Límite de transacciones por CSV? | Sin límite / Máx 100 / Máx 500 |
+| P-7 | ¿Qué pasa si el CSV tiene filas con errores? | Saltar filas erróneas / Rechazar todo / Mostrar resumen de errores |
+| P-8 | ¿Categorías predefinidas o el usuario crea las suyas? | Lista fija / Usuario crea / Mixto |
 
 ---
 
@@ -166,7 +247,14 @@ El usuario puede registrar ingresos y gastos mediante lenguaje natural, ya sea p
 
 ### Descripción
 
-El usuario puede definir presupuestos mensuales por categoría y configurar umbrales para recibir alertas cuando se acerque o supere el límite.
+El usuario puede definir presupuestos mensuales por categoría y configurar umbrales para recibir alertas cuando se acerque o supere el límite. La interpretación de mensajes por WhatsApp la realiza **n8n (Denise)**. El **backend** recibe el JSON ya interpretado.
+
+### Responsabilidades
+
+| Componente | Responsabilidad |
+|---|---|
+| **n8n (Denise)** | Recibe mensaje de WhatsApp, interpreta intención de crear/consultar presupuesto, muestra confirmación, envía JSON al backend |
+| **Backend (Julio/Leonel)** | Recibe JSON de n8n, guarda presupuestos, calcula gasto mensual por categoría, retorna estado del presupuesto |
 
 ### Precondiciones
 
@@ -175,42 +263,87 @@ El usuario puede definir presupuestos mensuales por categoría y configurar umbr
 
 ### Flujos
 
-#### Flujo 1: Crear presupuesto por WhatsApp
+#### Flujo 1: Crear presupuesto por WhatsApp (n8n → Backend)
 
 1. El usuario envía un mensaje como: "presupuesto comida 500" o "límite mensual comida $500".
-2. El agente interpreta: categoría = comida, monto = 500.
-3. El agente confirma: "Entendido, tu presupuesto de comida es $500/mes. ¿Correcto?"
+2. **n8n** interpreta: categoría = comida, monto = 500.
+3. **n8n** muestra al usuario: "Entendido, tu presupuesto de comida es $500/mes. ¿Correcto?"
 4. El usuario confirma o corrige.
-5. Se guarda el presupuesto.
+5. **n8n** envía `POST /api/budgets/webhook` al backend.
+6. **Backend** guarda el presupuesto y retorna confirmación.
+
+**JSON que n8n envía al backend:**
+
+```json
+{
+  "usuario_id": "uuid-del-usuario",
+  "categoria": "comida",
+  "monto": 500.00,
+  "mes": 7,
+  "anio": 2026,
+  "umbral": 80
+}
+```
 
 #### Flujo 2: Crear presupuesto por la app web
 
 1. El usuario navega a la sección de presupuestos.
 2. Selecciona una categoría, ingresa el monto mensual y configura el umbral.
-3. Guarda el presupuesto.
+3. El frontend envía `POST /api/budgets` al backend.
+4. **Backend** guarda y retorna confirmación.
 
-#### Flujo 3: Consultar presupuesto
+#### Flujo 3: Consultar presupuesto por WhatsApp (n8n → Backend)
 
-1. El usuario pregunta por WhatsApp: "¿Cuánto me queda de comida este mes?"
-2. El agente consulta los gastos de la categoría en el mes actual.
-3. Responde con: monto gastado, presupuesto restante y porcentaje usado.
+1. El usuario pregunta: "¿Cuánto me queda de comida este mes?"
+2. **n8n** envía `GET /api/budgets/status?usuario_id=xxx&categoria=comida` al backend.
+3. **Backend** calcula el gasto mensual en esa categoría y retorna:
+
+```json
+{
+  "categoria": "comida",
+  "presupuesto": 500.00,
+  "gastado": 320.00,
+  "restante": 180.00,
+  "porcentaje_usado": 64,
+  "umbral": 80,
+  "alerta": false
+}
+```
+
+4. **n8n** formatea la respuesta y la envía al usuario por WhatsApp.
+
+#### Flujo 4: Listar presupuestos (app web)
+
+1. El frontend solicita `GET /api/budgets?usuario_id=xxx`.
+2. **Backend** retorna la lista de presupuestos del usuario con su estado actual.
+
+### Endpoints del backend
+
+| Método | Ruta | Descripción | Origen |
+|---|---|---|---|
+| `POST` | `/api/budgets/webhook` | Recibe JSON de n8n y guarda presupuesto | n8n |
+| `POST` | `/api/budgets` | Crear presupuesto manual (formulario web) | Frontend |
+| `GET` | `/api/budgets` | Listar presupuestos del usuario | Frontend |
+| `GET` | `/api/budgets/status` | Consultar estado de presupuesto por categoría | n8n / Frontend |
+| `PATCH` | `/api/budgets/:id` | Editar presupuesto | Frontend |
+| `DELETE` | `/api/budgets/:id` | Eliminar presupuesto | Frontend |
 
 ### Criterios de aceptación
 
-- [ ] Se puede crear un presupuesto mensual por categoría desde WhatsApp.
-- [ ] Se puede crear un presupuesto mensual por categoría desde la app web.
+- [ ] n8n puede enviar presupuestos al backend vía `POST /api/budgets/webhook`.
+- [ ] El frontend puede crear/editar/eliminar presupuestos.
 - [ ] El presupuesto requiere: categoría y monto mensual.
 - [ ] El gasto mensual por categoría se calcula sumando los gastos de esa categoría en el mes.
-- [ ] Se puede consultar el estado del presupuesto por WhatsApp.
+- [ ] Se puede consultar el estado del presupuesto (gastado, restante, porcentaje).
 
 ### Pendientes
 
 | # | Pregunta | Opciones posibles |
 |---|---|---|
-| P-10 | ¿El umbral se define en porcentaje o valor fijo? | Porcentaje (ej: 80%) / Valor fijo (ej: $400) / Ambos |
-| P-11 | ¿Se pueden editar presupuestos existentes? | Sí / No (solo crear uno nuevo) |
-| P-12 | ¿Se pueden eliminar presupuestos? | Sí / No |
-| P-13 | ¿Un usuario puede tener varios presupuestos por categoría? | No (uno por categoría) / Sí (ej: comida normal + comida restaurantes) |
+| P-9 | ¿El umbral se define en porcentaje o valor fijo? | Porcentaje (ej: 80%) / Valor fijo (ej: $400) / Ambos |
+| P-10 | ¿Se pueden editar presupuestos existentes? | Sí / No (solo crear uno nuevo) |
+| P-11 | ¿Se pueden eliminar presupuestos? | Sí / No |
+| P-12 | ¿Un usuario puede tener varios presupuestos por categoría? | No (uno por categoría) / Sí (ej: comida normal + comida restaurantes) |
 
 ---
 
@@ -324,21 +457,20 @@ Un asistente financiero responde consultas del cliente sobre su cuenta, procesos
 | P-3 | RF-01 | ¿Se permite eliminar cuenta? |
 | P-4 | RF-01 | ¿OAuth solo Google o también otros proveedores? |
 | P-5 | RF-02 | ¿Formato exacto del CSV bancario? |
-| P-6 | RF-02 | ¿Cómo se envía el CSV por WhatsApp? |
-| P-7 | RF-02 | ¿Límite de transacciones por CSV? |
-| P-8 | RF-02 | ¿Qué pasa si el CSV tiene filas con errores? |
-| P-9 | RF-02 | ¿Categorías predefinidas o el usuario crea las suyas? |
-| P-10 | RF-03 | ¿El umbral se define en porcentaje o valor fijo? |
-| P-11 | RF-03 | ¿Se pueden editar presupuestos existentes? |
-| P-12 | RF-03 | ¿Se pueden eliminar presupuestos? |
-| P-13 | RF-03 | ¿Un usuario puede tener varios presupuestos por categoría? |
-| P-14 | RF-04 | ¿Canal de envío de alertas? |
-| P-15 | RF-04 | ¿Las alertas se envían en tiempo real o en resumen? |
-| P-16 | RF-04 | ¿El usuario puede desactivar alertas por categoría? |
-| P-17 | RF-05 | ¿Cómo se alimenta la base de conocimiento? |
-| P-18 | RF-05 | ¿Quién recibe los tickets derivados? |
-| P-19 | RF-05 | ¿Las prioridades se calculan automáticamente o manualmente? |
-| P-20 | RF-05 | ¿Se pueden reabrir tickets resueltos? |
+| P-6 | RF-02 | ¿Límite de transacciones por CSV? |
+| P-7 | RF-02 | ¿Qué pasa si el CSV tiene filas con errores? |
+| P-8 | RF-02 | ¿Categorías predefinidas o el usuario crea las suyas? |
+| P-9 | RF-03 | ¿El umbral se define en porcentaje o valor fijo? |
+| P-10 | RF-03 | ¿Se pueden editar presupuestos existentes? |
+| P-11 | RF-03 | ¿Se pueden eliminar presupuestos? |
+| P-12 | RF-03 | ¿Un usuario puede tener varios presupuestos por categoría? |
+| P-13 | RF-04 | ¿Canal de envío de alertas? |
+| P-14 | RF-04 | ¿Las alertas se envían en tiempo real o en resumen? |
+| P-15 | RF-04 | ¿El usuario puede desactivar alertas por categoría? |
+| P-16 | RF-05 | ¿Cómo se alimenta la base de conocimiento? |
+| P-17 | RF-05 | ¿Quién recibe los tickets derivados? |
+| P-18 | RF-05 | ¿Las prioridades se calculan automáticamente o manualmente? |
+| P-19 | RF-05 | ¿Se pueden reabrir tickets resueltos? |
 
 ---
 
