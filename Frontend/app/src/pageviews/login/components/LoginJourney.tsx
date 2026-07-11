@@ -8,6 +8,7 @@ interface JourneyStepProps {
   className: string;
   label: string;
   icon: 'chart' | 'control' | 'growth';
+  delay: string;
 }
 
 function JourneyIcon({ icon }: Pick<JourneyStepProps, 'icon'>) {
@@ -38,9 +39,9 @@ function JourneyIcon({ icon }: Pick<JourneyStepProps, 'icon'>) {
   );
 }
 
-function JourneyStep({ className, label, icon }: JourneyStepProps) {
+function JourneyStep({ className, label, icon, delay }: JourneyStepProps) {
   return (
-    <div className={`absolute flex w-28 -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5 text-[#174c39] ${className}`}>
+    <div style={{ '--journey-delay': delay } as React.CSSProperties} className={`journey-step absolute flex w-28 -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5 text-[#174c39] ${className}`}>
       <span className="flex h-16 w-16 items-center justify-center rounded-full border border-[#b9c98d] bg-[#fffdf5]/90 text-[#5e9c3f] shadow-[0_7px_24px_rgba(29,83,57,0.12)] backdrop-blur-sm">
         <JourneyIcon icon={icon} />
       </span>
@@ -53,12 +54,21 @@ function JourneyStep({ className, label, icon }: JourneyStepProps) {
 
 export function LoginJourney({ journey }: LoginJourneyProps) {
   return (
-    <aside className="pointer-events-none absolute bottom-[8%] left-[25%] top-[8%] z-0 hidden right-[44rem] min-[1500px]:block" aria-label={`${journey.lineOne} ${journey.lineTwo}`}>
+    <aside className="auth-hero-enter pointer-events-none absolute bottom-[8%] left-[25%] top-[8%] right-176 z-0 hidden min-[1500px]:block" aria-label={`${journey.lineOne} ${journey.lineTwo}`}>
       <svg aria-hidden="true" viewBox="0 0 720 850" preserveAspectRatio="none" className="absolute inset-0 h-full w-full overflow-visible">
+        <defs>
+          <linearGradient id="journey-line-gradient" x1="0" y1="850" x2="0" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#eadbc0" />
+            <stop offset="16%" stopColor="#4e9f4a" />
+            <stop offset="82%" stopColor="#4e9f4a" />
+            <stop offset="100%" stopColor="#eadbc0" />
+          </linearGradient>
+        </defs>
         <path
+          className="journey-line"
           d="M122 155C220 108 486 102 596 120c93 42 80 145 5 217-48 46-56 105-10 150 60 58 55 132-35 178-102 52-260 48-433 151"
           fill="none"
-          stroke="#75a95d"
+          stroke="url(#journey-line-gradient)"
           strokeWidth="2"
           strokeLinecap="round"
           opacity=".72"
@@ -69,9 +79,9 @@ export function LoginJourney({ journey }: LoginJourneyProps) {
         <circle cx="402" cy="724" r="3.5" fill="#7ead4b" />
       </svg>
 
-      <JourneyStep className="left-[82.8%] top-[14.1%]" label={journey.know} icon="chart" />
-      <JourneyStep className="left-[82.1%] top-[57.3%]" label={journey.control} icon="control" />
-      <JourneyStep className="left-[55.5%] top-[85.2%]" label={journey.improve} icon="growth" />
+      <JourneyStep className="left-[82.8%] top-[14.1%]" label={journey.know} icon="chart" delay="760ms" />
+      <JourneyStep className="left-[82.1%] top-[57.3%]" label={journey.control} icon="control" delay="1.18s" />
+      <JourneyStep className="left-[55.5%] top-[85.2%]" label={journey.improve} icon="growth" delay="1.62s" />
 
       <div className="absolute left-[9%] top-[35%] w-[67%] text-center text-[#0b4937] drop-shadow-[0_2px_12px_rgba(255,255,255,0.95)]">
         <h1 className="text-[clamp(2.25rem,3.1vw,3.8rem)] font-bold leading-[1.02] tracking-[-0.04em]">

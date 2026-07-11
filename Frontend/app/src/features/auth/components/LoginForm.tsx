@@ -2,28 +2,29 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+import type { Locale } from '@/shared/i18n/config';
 import type { LoginDictionary } from '@/shared/i18n/dictionaries/login';
-import { loginUser } from '../api/login';
+import { isStrongPassword, isValidEmail, MAX_EMAIL_LENGTH, MAX_PASSWORD_LENGTH, normalizeEmail } from '../lib/validation';
 
 interface LoginFormProps {
   dict: LoginDictionary;
+  locale: Locale;
 }
 
-export function LoginForm({ dict }: LoginFormProps) {
+export function LoginForm({ dict, locale }: LoginFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setLoading(true);
+    const emailInput = event.currentTarget.elements.namedItem('email') as HTMLInputElement;
+    const passwordInput = event.currentTarget.elements.namedItem('password') as HTMLInputElement;
 
-    try {
-      await loginUser(email);
-    } finally {
-      setLoading(false);
-    }
+    emailInput.setCustomValidity(isValidEmail(email) ? '' : dict.validation.email);
+    passwordInput.setCustomValidity(isStrongPassword(password) ? '' : dict.validation.password);
+    event.currentTarget.reportValidity();
   };
 
   return (
@@ -36,7 +37,6 @@ export function LoginForm({ dict }: LoginFormProps) {
           height={58}
           sizes="58px"
           className="h-[52px] w-[52px] object-contain sm:h-[58px] sm:w-[58px]"
-          priority
         />
         <span className="text-[2.4rem] font-bold leading-none tracking-[-0.04em] text-[#083b2c] sm:text-[2.75rem]">
           {dict.brandName}
@@ -60,9 +60,12 @@ export function LoginForm({ dict }: LoginFormProps) {
               autoComplete="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
+              onBlur={() => setEmail((value) => normalizeEmail(value))}
+              onInput={(event) => event.currentTarget.setCustomValidity('')}
               placeholder={dict.emailPlaceholder}
               className="min-h-14 w-full rounded-xl border border-slate-300 bg-white py-3.5 pl-12 pr-4 text-base text-slate-900 outline-none transition placeholder:text-slate-400 hover:border-slate-400 focus:border-[#08704d] focus:ring-3 focus:ring-emerald-700/10"
               required
+              maxLength={MAX_EMAIL_LENGTH}
             />
           </div>
         </div>
@@ -83,9 +86,12 @@ export function LoginForm({ dict }: LoginFormProps) {
               autoComplete="current-password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
+              onInput={(event) => event.currentTarget.setCustomValidity('')}
               placeholder="••••••••••••"
               className="min-h-14 w-full rounded-xl border border-slate-300 bg-white py-3.5 pl-12 pr-12 text-base text-slate-900 outline-none transition placeholder:text-slate-500 hover:border-slate-400 focus:border-[#08704d] focus:ring-3 focus:ring-emerald-700/10"
               required
+              minLength={8}
+              maxLength={MAX_PASSWORD_LENGTH}
             />
             <button
               type="button"
@@ -107,31 +113,21 @@ export function LoginForm({ dict }: LoginFormProps) {
             </button>
           </div>
           <div className="pt-1 text-right">
-            <a href="#" className="text-sm font-semibold text-indigo-600 transition-colors hover:text-indigo-800 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+            <Link href={`/${locale}/forgot-password`} className="text-sm font-semibold text-indigo-600 transition-colors hover:text-indigo-800 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
               {dict.forgotPassword}
-            </a>
+            </Link>
           </div>
         </div>
 
         <button
           id="login-submit"
           type="submit"
-          disabled={loading}
-          className="relative flex min-h-14 w-full items-center justify-center rounded-xl bg-[#075b40] px-5 text-base font-semibold text-white shadow-[0_8px_20px_rgba(7,91,64,0.2)] transition hover:bg-[#064c36] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075b40] disabled:cursor-wait disabled:opacity-60"
+          className="relative flex min-h-14 w-full items-center justify-center rounded-xl bg-[#075b40] px-5 text-base font-semibold text-white shadow-[0_8px_20px_rgba(7,91,64,0.2)] transition hover:bg-[#064c36] active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075b40]"
         >
-          {loading ? (
-            <svg aria-label={dict.loading} className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.37 0 0 5.37 0 12h4Z" />
-            </svg>
-          ) : (
-            <>
-              <span>{dict.submit}</span>
-              <svg aria-hidden="true" className="absolute right-5" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14m-7-7 7 7-7 7" />
-              </svg>
-            </>
-          )}
+          <span>{dict.submit}</span>
+          <svg aria-hidden="true" className="absolute right-5" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14m-7-7 7 7-7 7" />
+          </svg>
         </button>
       </form>
 
@@ -155,9 +151,9 @@ export function LoginForm({ dict }: LoginFormProps) {
 
       <p className="mt-7 text-center text-sm font-medium text-slate-600 sm:text-base">
         {dict.noAccount}{' '}
-        <a href="#" className="font-bold text-[#08704d] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075b40]">
+        <Link href={`/${locale}/register`} className="font-bold text-[#08704d] hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075b40]">
           {dict.createAccount}
-        </a>
+        </Link>
       </p>
     </div>
   );

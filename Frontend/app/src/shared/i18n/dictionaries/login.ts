@@ -15,8 +15,11 @@ export interface LoginDictionary {
   changeTheme: string;
   showPassword: string;
   hidePassword: string;
-  loading: string;
   continueWithProvider: string;
+  validation: {
+    email: string;
+    password: string;
+  };
   journey: {
     lineOne: string;
     lineTwo: string;
@@ -43,8 +46,11 @@ const loginDictionaries: Record<Locale, LoginDictionary> = {
     changeTheme: 'Cambiar tema',
     showPassword: 'Mostrar contraseña',
     hidePassword: 'Ocultar contraseña',
-    loading: 'Cargando',
     continueWithProvider: 'Continuar con',
+    validation: {
+      email: 'Ingresa un correo electrónico válido.',
+      password: 'La contraseña debe tener entre 8 y 64 caracteres, con mayúscula, minúscula, número y símbolo.',
+    },
     journey: {
       lineOne: 'Tu dinero,',
       lineTwo: 'en equilibrio',
@@ -69,8 +75,11 @@ const loginDictionaries: Record<Locale, LoginDictionary> = {
     changeTheme: 'Change theme',
     showPassword: 'Show password',
     hidePassword: 'Hide password',
-    loading: 'Loading',
     continueWithProvider: 'Continue with',
+    validation: {
+      email: 'Enter a valid email address.',
+      password: 'Use 8–64 characters with uppercase, lowercase, a number, and a symbol.',
+    },
     journey: {
       lineOne: 'Your money,',
       lineTwo: 'in balance',
