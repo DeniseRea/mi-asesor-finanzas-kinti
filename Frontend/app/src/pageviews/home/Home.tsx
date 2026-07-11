@@ -1,7 +1,8 @@
 import { Hero } from './components/Hero';
+import type { HomeDictionary } from '@/shared/i18n/dictionaries/home';
 
 interface HomeProps {
-  dict: any;
+  dict: HomeDictionary;
 }
 
 export function Home({ dict }: HomeProps) {

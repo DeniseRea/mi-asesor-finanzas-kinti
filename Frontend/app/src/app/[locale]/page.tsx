@@ -1,4 +1,4 @@
-import { getDictionary } from '@/shared/i18n/getDictionary';
+import { getHomeDictionary } from '@/shared/i18n/dictionaries/home';
 import { Home } from '@/pageviews/home/Home';
 
 interface PageProps {
@@ -8,7 +8,7 @@ interface PageProps {
 export default async function Page({ params }: PageProps) {
   const { locale } = await params;
   const currentLocale = (locale === 'en' ? 'en' : 'es') as 'es' | 'en';
-  const dict = await getDictionary(currentLocale);
+  const dict = getHomeDictionary(currentLocale);
 
   return <Home dict={dict} />;
 }
