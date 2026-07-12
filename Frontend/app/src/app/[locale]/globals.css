@@ -169,6 +169,79 @@ html {
   color: #d1fae5;
 }
 
+/* Dashboard dark-mode contrast fixes. Scoped away from the public landing/auth views. */
+.dark .metric-sparkline-green .metric-sparkline-fill-start {
+  stop-color: #34d399;
+  stop-opacity: 0.46;
+}
+
+.dark .metric-sparkline-green .metric-sparkline-fill-end {
+  stop-color: #34d399;
+  stop-opacity: 0.035;
+}
+
+.dark .metric-sparkline-red .metric-sparkline-fill-start {
+  stop-color: #fb7185;
+  stop-opacity: 0.46;
+}
+
+.dark .metric-sparkline-red .metric-sparkline-fill-end {
+  stop-color: #fb7185;
+  stop-opacity: 0.035;
+}
+
+/* Topbar and notification controls must keep their icons visible on hover. */
+.dark header button[class*='border-slate-200'],
+.dark header a[class*='border-slate-200'] {
+  color: #cbd5e1;
+  border-color: #334155;
+}
+
+.dark header button[class*='border-slate-200']:hover,
+.dark header a[class*='border-slate-200']:hover {
+  color: #a7f3d0;
+  background-color: rgb(6 78 59 / 0.42);
+  border-color: rgb(52 211 153 / 0.45);
+}
+
+.dark aside[class*='right-0'] button[class*='rounded-full'][class*='p-2'] {
+  color: #cbd5e1;
+}
+
+.dark aside[class*='right-0'] button[class*='rounded-full'][class*='p-2']:hover {
+  color: #a7f3d0;
+  background-color: rgb(6 78 59 / 0.42);
+}
+
+.dark main a.group:hover {
+  background-color: rgb(6 78 59 / 0.28);
+  border-color: rgb(52 211 153 / 0.5);
+}
+
+.dark main a.group:hover p.font-bold {
+  color: #6ee7b7;
+}
+
+.dark main tr:hover {
+  background-color: rgb(6 78 59 / 0.28) !important;
+}
+
+.dark main [class*='from-emerald-50'][class*='to-lime-50'] p {
+  color: rgb(209 250 229 / 0.9);
+}
+
+.dark aside[class*='right-0'] [class*='from-emerald-50'][class*='to-lime-50'] {
+  background-image: linear-gradient(to bottom right, rgb(6 78 59 / 0.5), rgb(54 83 20 / 0.24));
+}
+
+.dark aside[class*='right-0'] [class*='from-emerald-50'][class*='to-lime-50'] strong {
+  color: #d1fae5;
+}
+
+.dark aside[class*='right-0'] [class*='from-emerald-50'][class*='to-lime-50'] span {
+  color: rgb(167 243 208 / 0.82);
+}
+
 .dark .landing-section-heading > h2 {
   color: #064e3b;
 }
