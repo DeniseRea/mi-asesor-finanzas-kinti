@@ -26,6 +26,8 @@ export function Login({ dict, locale }: LoginProps) {
           route="login"
           changeLanguageLabel={dict.changeLanguage}
           changeThemeLabel={dict.changeTheme}
+          backHref={`/${locale}`}
+          backLabel={dict.backHome}
         />
 
         <div className="flex flex-1 items-center px-5 pb-7 pt-5 sm:px-8 sm:pb-9 lg:px-14 lg:pb-12 lg:pt-7">

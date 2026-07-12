@@ -2,16 +2,17 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { ArrowDown, ArrowUp, Bot, FileUp, MessageCircle, PenLine, PiggyBank, WalletCards } from 'lucide-react';
-import { Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { useFinance } from '@/entities/finance/model/FinanceProvider';
 import { AppCard } from '@/shared/components/AppCard';
 import { MetricCard } from '@/shared/components/MetricCard';
 
 const colors = ['#15803d', '#7c3aed', '#f59e0b', '#f43f5e', '#3b82f6', '#94a3b8'];
+const CategoryDonut = dynamic(() => import('./components/CategoryDonut').then((module) => module.CategoryDonut), { ssr: false, loading: () => <div className="grid h-76 place-items-center"><div className="size-48 animate-pulse rounded-full border-[3rem] border-slate-100 dark:border-slate-700"/></div> });
 
 export function Dashboard({ locale }: { locale: 'es' | 'en' }) {
-  const { summary, transactions, expensesByCategory, budgets, formatMoney } = useFinance();
+  const { summary, transactions, expensesByCategory, budgets, preferences, formatMoney } = useFinance();
   const data = Object.entries(expensesByCategory).map(([name, value], index) => ({ name, value, fill: colors[index % colors.length] }));
   const totalBudget = budgets.reduce((sum, item) => sum + item.limit, 0);
   const food = budgets.find((item) => item.category === 'Comida'); const foodSpent = expensesByCategory.Comida ?? 0; const foodPercent = Math.round(foodSpent / (food?.limit ?? 1) * 100);
@@ -25,7 +26,7 @@ export function Dashboard({ locale }: { locale: 'es' | 'en' }) {
   return <div className="space-y-6">
     <div className="grid grid-cols-2 gap-3 xl:grid-cols-4"><MetricCard title={t.balance} value={formatMoney(summary.balance)} detail="↑ 8.5% vs. mes pasado" trend={[22,28,25,33,29,42,37,51,47,58,54,68]} icon={<WalletCards size={20}/>}/><MetricCard title={t.income} value={formatMoney(summary.income)} detail="↑ 12% vs. mes pasado" trend={[18,22,20,29,24,35,31,42,38,49,45,60]} icon={<ArrowDown size={20}/>}/><MetricCard title={t.expenses} value={formatMoney(summary.expenses)} detail="↑ 7% vs. mes pasado" trend={[14,19,16,25,20,29,27,38,33,43,39,48]} tone="red" icon={<ArrowUp size={20}/>}/><MetricCard title={t.available} value={formatMoney(totalBudget - summary.expenses)} detail={`${Math.max(0, Math.round((totalBudget - summary.expenses) / totalBudget * 100))}% restante`} progress={Math.min(100, summary.expenses / totalBudget * 100)} tone="violet" icon={<PiggyBank size={20}/>}/></div>
     <div className="grid gap-4 xl:grid-cols-[1.15fr_1fr_.68fr]">
-      <AppCard className="min-h-80 p-5"><h2 className="font-bold">{t.categories}</h2><div className="relative h-76"><ResponsiveContainer width="100%" height="100%"><PieChart><Pie data={data} cy="43%" innerRadius={74} outerRadius={112} paddingAngle={1} dataKey="value"/><Tooltip formatter={(value) => formatMoney(Number(value))}/><Legend iconType="circle" verticalAlign="bottom"/></PieChart></ResponsiveContainer><div className="pointer-events-none absolute left-1/2 top-[43%] -translate-x-1/2 -translate-y-1/2 text-center"><strong className="block text-xl text-slate-950">{formatMoney(summary.expenses)}</strong><span className="text-xs text-slate-500">Total gastos</span></div></div></AppCard>
+      <AppCard className="min-h-80 p-5"><h2 className="font-bold">{t.categories}</h2><CategoryDonut data={data} total={summary.expenses} currency={preferences.currency}/></AppCard>
       <AppCard className="p-5"><div className="mb-3 flex items-center justify-between"><h2 className="font-bold">{t.recent}</h2><Link href={`/${locale}/dashboard/movimientos`} className="text-xs font-semibold text-emerald-700">Ver todo</Link></div><div className="divide-y divide-slate-100">{transactions.slice(0, 5).map((item) => <div key={item.id} className="flex items-center gap-3 py-3"><span className={`grid size-9 place-items-center rounded-full ${item.type === 'income' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>{item.type === 'income' ? <ArrowDown size={17}/> : <ArrowUp size={17}/>}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-bold">{item.merchant}</p><p className="text-xs text-slate-500">{item.category}</p></div><strong className={`text-sm ${item.type === 'income' ? 'text-emerald-700' : 'text-slate-900'}`}>{item.type === 'income' ? '+' : '-'}{formatMoney(item.amount)}</strong></div>)}</div></AppCard>
       <AppCard className={`p-5 ${foodPercent >= 100 ? 'border-rose-200 bg-rose-50/40' : 'border-orange-200 bg-orange-50/40'}`}><h2 className="font-bold text-slate-900">{t.alert}</h2><div className="mx-auto my-6 grid size-32 place-items-center rounded-full" style={{ background: `conic-gradient(${foodPercent >= 100 ? '#e11d48' : '#f59e0b'} ${Math.min(foodPercent, 100)}%, #e2e8f0 0)` }}><span className="grid size-24 place-items-center rounded-full bg-white text-center"><span><strong className="block text-2xl">{foodPercent}%</strong><span className="text-slate-500">utilizado</span></span></span></div><p className="text-center text-lg font-bold">Comida</p><p className="mt-2 text-center text-sm text-slate-600">Has gastado {formatMoney(foodSpent)} de {formatMoney(food?.limit ?? 0)}.</p></AppCard>
     </div>

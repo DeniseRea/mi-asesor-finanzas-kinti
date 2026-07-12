@@ -16,6 +16,7 @@ export interface LoginDictionary {
   showPassword: string;
   hidePassword: string;
   continueWithProvider: string;
+  backHome: string;
   validation: {
     email: string;
     password: string;
@@ -47,6 +48,7 @@ const loginDictionaries: Record<Locale, LoginDictionary> = {
     showPassword: 'Mostrar contraseña',
     hidePassword: 'Ocultar contraseña',
     continueWithProvider: 'Continuar con',
+    backHome: 'Volver al inicio',
     validation: {
       email: 'Ingresa un correo electrónico válido.',
       password: 'La contraseña debe tener entre 8 y 64 caracteres, con mayúscula, minúscula, número y símbolo.',
@@ -76,6 +78,7 @@ const loginDictionaries: Record<Locale, LoginDictionary> = {
     showPassword: 'Show password',
     hidePassword: 'Hide password',
     continueWithProvider: 'Continue with',
+    backHome: 'Back to home',
     validation: {
       email: 'Enter a valid email address.',
       password: 'Use 8–64 characters with uppercase, lowercase, a number, and a symbol.',

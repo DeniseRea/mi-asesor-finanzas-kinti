@@ -91,14 +91,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
-    try {
-      await apiClient<LogoutResponse>('/api/auth/logout', { method: 'POST' });
-    } catch {
-      // Logout local aunque falle el server
-    }
+    const logoutRequest = apiClient<LogoutResponse>('/api/auth/logout', { method: 'POST', keepalive: true });
     removeToken();
     localStorage.removeItem('kinti_demo');
     setUser(null);
+    try {
+      await logoutRequest;
+    } catch {
+      // Logout local aunque falle el server
+    }
   };
 
   const enterDemo = () => {

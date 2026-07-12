@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -20,15 +20,24 @@ export function LoginForm({ dict, locale }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, loginWithGoogle } = useAuth();
+  const { login, loginWithGoogle, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
+  const dashboardHref = `/${locale}/dashboard`;
+
+  useEffect(() => {
+    router.prefetch(dashboardHref);
+  }, [dashboardHref, router]);
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) router.replace(dashboardHref);
+  }, [dashboardHref, isAuthenticated, isLoading, router]);
 
   const handleGoogleLogin = async () => {
     setError('');
     setIsSubmitting(true);
     try {
       await loginWithGoogle();
-      router.push(`/${locale}/dashboard`);
+      router.replace(dashboardHref);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al iniciar sesion con Google');
     } finally {
@@ -51,7 +60,7 @@ export function LoginForm({ dict, locale }: LoginFormProps) {
     setIsSubmitting(true);
     try {
       await login({ email, password });
-      router.push(`/${locale}/dashboard`);
+      router.replace(dashboardHref);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al iniciar sesion');
     } finally {

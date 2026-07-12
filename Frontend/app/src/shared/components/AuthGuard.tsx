@@ -12,7 +12,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       const locale = pathname.split('/')[1] || 'es';
-      router.push(`/${locale}/login`);
+      router.replace(`/${locale}/login`);
     }
   }, [isLoading, isAuthenticated, router, pathname]);
 

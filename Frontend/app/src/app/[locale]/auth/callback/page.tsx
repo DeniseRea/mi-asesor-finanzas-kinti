@@ -12,9 +12,9 @@ function CallbackHandler() {
     const token = searchParams.get('token');
     if (token) {
       storeToken(token);
-      router.push('/es/dashboard');
+      router.replace('/es/dashboard');
     } else {
-      router.push('/es/login');
+      router.replace('/es/login');
     }
   }, [searchParams, router]);
 

@@ -1,0 +1,3 @@
+export default function DashboardLoading() {
+  return <div className="animate-pulse space-y-6" aria-label="Cargando dashboard"><div className="grid grid-cols-2 gap-3 xl:grid-cols-4">{Array.from({ length: 4 }, (_, index) => <div key={index} className="h-36 rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"/>)}</div><div className="grid gap-4 xl:grid-cols-[1.15fr_1fr_.68fr]"><div className="h-96 rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"/><div className="h-96 rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"/><div className="h-96 rounded-2xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"/></div></div>;
+}
