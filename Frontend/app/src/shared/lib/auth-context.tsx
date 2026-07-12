@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '@/shared/lib/firebase';
 import { apiClient, storeToken, getStoredToken, removeToken } from '@/shared/api/apiClient';
@@ -23,26 +23,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadUser = useCallback(async () => {
+  useEffect(() => {
     const token = getStoredToken();
     if (!token) {
-      setIsLoading(false);
+      queueMicrotask(() => setIsLoading(false));
       return;
     }
-
-    try {
-      const res = await apiClient<ProfileResponse>('/api/auth/profile');
-      setUser({ id: res.id, name: res.name, email: res.email });
-    } catch {
-      removeToken();
-    } finally {
-      setIsLoading(false);
-    }
+    let active = true;
+    apiClient<ProfileResponse>('/api/auth/profile')
+      .then((res) => { if (active) setUser({ id: res.id, name: res.name, email: res.email }); })
+      .catch(() => removeToken())
+      .finally(() => { if (active) setIsLoading(false); });
+    return () => { active = false; };
   }, []);
-
-  useEffect(() => {
-    loadUser();
-  }, [loadUser]);
 
   const login = async (data: LoginRequest) => {
     const res = await apiClient<LoginResponse>('/api/auth/login', {

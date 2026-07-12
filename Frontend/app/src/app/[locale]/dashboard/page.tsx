@@ -1,6 +1,4 @@
-import { getDashboardDictionary } from '@/shared/i18n/dictionaries/dashboard';
 import { Dashboard } from '@/pageviews/dashboard/Dashboard';
-import { DashboardLayout } from '@/shared/components/DashboardLayout';
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -9,11 +7,5 @@ interface PageProps {
 export default async function Page({ params }: PageProps) {
   const { locale } = await params;
   const currentLocale = (locale === 'en' ? 'en' : 'es') as 'es' | 'en';
-  const dict = getDashboardDictionary(currentLocale);
-
-  return (
-    <DashboardLayout locale={currentLocale}>
-      <Dashboard dict={dict} />
-    </DashboardLayout>
-  );
+  return <Dashboard locale={currentLocale} />;
 }

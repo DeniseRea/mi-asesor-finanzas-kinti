@@ -1,5 +1,48 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+.dark .bg-white { background-color: #111827; }
+.dark .bg-slate-50 { background-color: #172033; }
+.dark .text-slate-950,
+.dark .text-slate-900 { color: #f8fafc; }
+.dark .text-slate-700,
+.dark .text-slate-600 { color: #cbd5e1; }
+.dark .text-slate-500 { color: #94a3b8; }
+.dark .border-slate-200,
+.dark .border-slate-100 { border-color: #263247; }
+.dark { color-scheme: dark; }
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #111827;
+  border-color: #334155;
+  color: #f8fafc;
+}
+.dark input::placeholder,
+.dark textarea::placeholder { color: #64748b; }
+.dark .bg-emerald-50 { background-color: rgb(6 78 59 / 28%); }
+.dark .bg-lime-50 { background-color: rgb(54 83 20 / 25%); }
+.dark .bg-violet-50 { background-color: rgb(76 29 149 / 24%); }
+.dark .bg-blue-50 { background-color: rgb(30 64 175 / 22%); }
+.dark .bg-orange-50 { background-color: rgb(154 52 18 / 22%); }
+.dark .bg-rose-50 { background-color: rgb(159 18 57 / 22%); }
+.dark .bg-slate-100 { background-color: #1e293b; }
+.dark .text-emerald-950,
+.dark .text-emerald-900,
+.dark .text-emerald-800 { color: #a7f3d0; }
+.dark .text-violet-900 { color: #ddd6fe; }
+.dark .text-rose-700 { color: #fda4af; }
+.dark .text-orange-700,
+.dark .text-orange-600 { color: #fdba74; }
+.dark .recharts-cartesian-grid line { stroke: #334155; }
+.dark .recharts-text { fill: #94a3b8; }
+.dark .recharts-default-tooltip {
+  background-color: #111827 !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
 :root {
   --journey-delay: 900ms;
 }
@@ -20,6 +63,29 @@
 html,
 body {
   background-color: #e7efdf;
+  overflow-x: hidden;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  transition: color 160ms ease, background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgb(16 185 129 / 30%);
+  outline-offset: 2px;
 }
 
 body {

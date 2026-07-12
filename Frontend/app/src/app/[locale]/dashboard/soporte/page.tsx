@@ -1,0 +1,1 @@
+import { Support } from '@/pageviews/support/Support'; export default async function Page({params}:{params:Promise<{locale:string}>}){const {locale}=await params;return <Support locale={locale==='en'?'en':'es'}/>;}

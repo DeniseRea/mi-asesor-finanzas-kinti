@@ -65,7 +65,7 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
     setIsSubmitting(true);
     try {
       await loginWithGoogle();
-      router.push(`/${locale}/dashboard`);
+      router.push(`/${locale}/dashboard/completar-perfil`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al iniciar sesion con Google');
     } finally {

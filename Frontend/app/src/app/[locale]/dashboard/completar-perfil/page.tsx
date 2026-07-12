@@ -1,0 +1,1 @@
+import { CompleteProfile } from '@/pageviews/profile/CompleteProfile'; export default async function Page({params}:{params:Promise<{locale:string}>}){const {locale}=await params;return <CompleteProfile locale={locale==='en'?'en':'es'}/>;}
