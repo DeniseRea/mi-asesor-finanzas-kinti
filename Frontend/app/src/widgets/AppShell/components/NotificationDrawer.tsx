@@ -3,7 +3,7 @@
 import { Bell, CheckCheck, Settings2, X } from 'lucide-react';
 import { useFinance } from '@/entities/finance/model/FinanceProvider';
 
-export function NotificationDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function NotificationDrawer({ open, onCloseAction: onClose }: { open: boolean; onCloseAction: () => void }) {
   const { notifications, preferences, dispatch } = useFinance();
   const unread = notifications.filter((item) => !item.read).length;
   const toggles = [{ key: 'budgetAlerts' as const, label: 'Alertas de presupuesto' },{ key: 'movementAlerts' as const, label: 'Ingresos y gastos' },{ key: 'insightAlerts' as const, label: 'Insights y recomendaciones' }];

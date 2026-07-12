@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Bell, Globe2, Menu, Moon, Plus, Search, Sun } from 'lucide-react';
 import { useFinance } from '@/entities/finance/model/FinanceProvider';
 
-export function Topbar({ locale, onMenu, onNotifications }: { locale: 'es' | 'en'; onMenu: () => void; onNotifications: () => void }) {
+export function Topbar({ locale, onMenuAction: onMenu, onNotificationsAction: onNotifications }: { locale: 'es' | 'en'; onMenuAction: () => void; onNotificationsAction: () => void }) {
   const { notifications, preferences, dispatch } = useFinance();
   const pathname = usePathname();
   const isHome = pathname === `/${locale}/dashboard`;

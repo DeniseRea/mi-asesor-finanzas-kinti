@@ -8,7 +8,9 @@ const inter = Inter({
   display: 'swap',
 });
 
-export const metadata = {
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
   title: 'Kinti - Mi Asesor de Finanzas',
   description: 'Controla tus finanzas de manera inteligente',
 };

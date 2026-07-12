@@ -7,7 +7,7 @@ import { LogOut, X } from 'lucide-react';
 import { useAuth } from '@/shared/lib/auth-context';
 import { navItems } from '@/widgets/AppShell/components/nav-items';
 
-export function Sidebar({ currentLocale, open = false, onClose }: { currentLocale: 'es' | 'en'; open?: boolean; onClose?: () => void }) {
+export function Sidebar({ currentLocale, open = false, onCloseAction: onClose }: { currentLocale: 'es' | 'en'; open?: boolean; onCloseAction?: () => void }) {
   const { user, logout } = useAuth(); const pathname = usePathname(); const router = useRouter();
   const handleLogout = () => { logout(); router.push(`/${currentLocale}/login`); };
   return <aside className={`fixed inset-y-0 left-0 z-50 flex h-dvh w-[17rem] flex-col overflow-hidden bg-linear-to-b from-[#063f31] to-[#002d25] p-4 text-white shadow-2xl transition-transform duration-300 lg:relative lg:inset-auto lg:w-[clamp(14rem,17vw,17rem)] lg:shrink-0 lg:translate-x-0 lg:shadow-none ${open ? 'translate-x-0' : '-translate-x-full'}`}>
