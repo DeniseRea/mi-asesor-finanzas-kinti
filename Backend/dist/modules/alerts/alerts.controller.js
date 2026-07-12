@@ -21,6 +21,7 @@ let AlertsController = class AlertsController {
     constructor(alertsService) {
         this.alertsService = alertsService;
     }
+<<<<<<< HEAD
     findAll(req, leida) {
         return this.alertsService.findAll(req.user.id, {
             leida: leida !== undefined ? leida === 'true' : undefined,
@@ -34,10 +35,18 @@ let AlertsController = class AlertsController {
     }
     remove(id, req) {
         return this.alertsService.remove(id, req.user.id);
+=======
+    findAll(req) {
+        return this.alertsService.findAll(req.user.id);
+    }
+    markAsRead(req, id) {
+        return this.alertsService.markAsRead(req.user.id, id);
+>>>>>>> main
     }
 };
 exports.AlertsController = AlertsController;
 __decorate([
+<<<<<<< HEAD
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Get)(),
     __param(0, (0, common_1.Req)()),
@@ -74,6 +83,25 @@ __decorate([
 ], AlertsController.prototype, "remove", null);
 exports.AlertsController = AlertsController = __decorate([
     (0, common_1.Controller)('alerts'),
+=======
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], AlertsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Patch)(':id/read'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], AlertsController.prototype, "markAsRead", null);
+exports.AlertsController = AlertsController = __decorate([
+    (0, common_1.Controller)('alerts'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+>>>>>>> main
     __metadata("design:paramtypes", [alerts_service_1.AlertsService])
 ], AlertsController);
 //# sourceMappingURL=alerts.controller.js.map

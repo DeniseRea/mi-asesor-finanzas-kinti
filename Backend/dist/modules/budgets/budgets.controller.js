@@ -23,6 +23,7 @@ let BudgetsController = class BudgetsController {
     constructor(budgetsService) {
         this.budgetsService = budgetsService;
     }
+<<<<<<< HEAD
     webhook(dto) {
         return this.budgetsService.create(dto);
     }
@@ -44,10 +45,24 @@ let BudgetsController = class BudgetsController {
     }
     remove(id, req) {
         return this.budgetsService.remove(id, req.user.id);
+=======
+    create(req, dto) {
+        return this.budgetsService.create(req.user.id, dto);
+    }
+    findAll(req) {
+        return this.budgetsService.findAll(req.user.id);
+    }
+    update(req, id, dto) {
+        return this.budgetsService.update(req.user.id, id, dto);
+    }
+    remove(req, id) {
+        return this.budgetsService.remove(req.user.id, id);
+>>>>>>> main
     }
 };
 exports.BudgetsController = BudgetsController;
 __decorate([
+<<<<<<< HEAD
     (0, common_1.Post)('webhook'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -99,10 +114,45 @@ __decorate([
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
+=======
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, create_budget_dto_1.CreateBudgetDto]),
+    __metadata("design:returntype", void 0)
+], BudgetsController.prototype, "create", null);
+__decorate([
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], BudgetsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Patch)(':id'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, update_budget_dto_1.UpdateBudgetDto]),
+    __metadata("design:returntype", void 0)
+], BudgetsController.prototype, "update", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+>>>>>>> main
     __metadata("design:returntype", void 0)
 ], BudgetsController.prototype, "remove", null);
 exports.BudgetsController = BudgetsController = __decorate([
     (0, common_1.Controller)('budgets'),
+<<<<<<< HEAD
+=======
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+>>>>>>> main
     __metadata("design:paramtypes", [budgets_service_1.BudgetsService])
 ], BudgetsController);
 //# sourceMappingURL=budgets.controller.js.map

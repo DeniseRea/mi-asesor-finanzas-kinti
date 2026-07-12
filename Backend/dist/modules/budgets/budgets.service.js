@@ -17,6 +17,7 @@ let BudgetsService = class BudgetsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
+<<<<<<< HEAD
     async create(dto) {
         const userId = dto.usuario_id;
         const user = await this.prisma.user.findUnique({ where: { id: userId } });
@@ -144,6 +145,52 @@ let BudgetsService = class BudgetsService {
         }
         await this.prisma.budget.delete({ where: { id } });
         return { deleted: true };
+=======
+    async create(userId, dto) {
+        return this.prisma.budget.create({
+            data: {
+                userId,
+                category: dto.category,
+                amount: dto.amount,
+                month: dto.month,
+                year: dto.year,
+                threshold: dto.threshold ?? 80,
+            },
+        });
+    }
+    async findAll(userId) {
+        return this.prisma.budget.findMany({
+            where: { userId },
+        });
+    }
+    async findOne(userId, id) {
+        const budget = await this.prisma.budget.findUnique({
+            where: { id },
+        });
+        if (!budget || budget.userId !== userId) {
+            throw new common_1.NotFoundException('Presupuesto no encontrado');
+        }
+        return budget;
+    }
+    async update(userId, id, dto) {
+        await this.findOne(userId, id);
+        return this.prisma.budget.update({
+            where: { id },
+            data: {
+                category: dto.category,
+                amount: dto.amount,
+                month: dto.month,
+                year: dto.year,
+                threshold: dto.threshold,
+            },
+        });
+    }
+    async remove(userId, id) {
+        await this.findOne(userId, id);
+        return this.prisma.budget.delete({
+            where: { id },
+        });
+>>>>>>> main
     }
 };
 exports.BudgetsService = BudgetsService;

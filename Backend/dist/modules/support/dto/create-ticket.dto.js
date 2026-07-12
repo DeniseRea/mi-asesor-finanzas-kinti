@@ -1,4 +1,5 @@
 "use strict";
+<<<<<<< HEAD
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -50,4 +51,14 @@ __decorate([
     (0, class_validator_1.IsIn)(['usuario', 'agente', 'humano']),
     __metadata("design:type", String)
 ], CreateTicketMessageDto.prototype, "rol", void 0);
+=======
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CreateTicketDto = void 0;
+class CreateTicketDto {
+    subject;
+    priority;
+    context;
+}
+exports.CreateTicketDto = CreateTicketDto;
+>>>>>>> main
 //# sourceMappingURL=create-ticket.dto.js.map

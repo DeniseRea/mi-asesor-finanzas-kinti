@@ -16,13 +16,19 @@ exports.SupportController = void 0;
 const common_1 = require("@nestjs/common");
 const support_service_1 = require("./support.service");
 const create_ticket_dto_1 = require("./dto/create-ticket.dto");
+<<<<<<< HEAD
 const create_knowledge_base_dto_1 = require("./dto/create-knowledge-base.dto");
+=======
+const create_message_dto_1 = require("./dto/create-message.dto");
+const create_kb_entry_dto_1 = require("./dto/create-kb-entry.dto");
+>>>>>>> main
 const jwt_auth_guard_1 = require("../auth/guards/jwt-auth.guard");
 let SupportController = class SupportController {
     supportService;
     constructor(supportService) {
         this.supportService = supportService;
     }
+<<<<<<< HEAD
     createTicket(dto) {
         return this.supportService.createTicket(dto);
     }
@@ -52,18 +58,47 @@ let SupportController = class SupportController {
     }
     removeKnowledgeBase(id) {
         return this.supportService.removeKnowledgeBase(id);
+=======
+    createTicket(req, dto) {
+        return this.supportService.createTicket(req.user.id, dto);
+    }
+    findTickets(req) {
+        return this.supportService.findTickets(req.user.id);
+    }
+    findTicketById(req, id) {
+        return this.supportService.findTicketById(req.user.id, id);
+    }
+    addTicketMessage(req, id, dto) {
+        return this.supportService.addTicketMessage(req.user.id, id, dto);
+    }
+    createKnowledgeBaseEntry(dto) {
+        return this.supportService.createKnowledgeBaseEntry(dto);
+    }
+    findKnowledgeBase() {
+        return this.supportService.findKnowledgeBase();
+>>>>>>> main
     }
 };
 exports.SupportController = SupportController;
 __decorate([
+<<<<<<< HEAD
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_ticket_dto_1.CreateTicketDto]),
+=======
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('tickets'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, create_ticket_dto_1.CreateTicketDto]),
+>>>>>>> main
     __metadata("design:returntype", void 0)
 ], SupportController.prototype, "createTicket", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+<<<<<<< HEAD
     (0, common_1.Get)(),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Query)('estado')),
@@ -107,11 +142,39 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], SupportController.prototype, "removeTicket", null);
+=======
+    (0, common_1.Get)('tickets'),
+    __param(0, (0, common_1.Request)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], SupportController.prototype, "findTickets", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Get)('tickets/:id'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], SupportController.prototype, "findTicketById", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('tickets/:id/messages'),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, create_message_dto_1.CreateMessageDto]),
+    __metadata("design:returntype", void 0)
+], SupportController.prototype, "addTicketMessage", null);
+>>>>>>> main
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Post)('knowledge-base'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
+<<<<<<< HEAD
     __metadata("design:paramtypes", [create_knowledge_base_dto_1.CreateKnowledgeBaseDto]),
     __metadata("design:returntype", void 0)
 ], SupportController.prototype, "createKnowledgeBase", null);
@@ -134,6 +197,19 @@ __decorate([
 ], SupportController.prototype, "removeKnowledgeBase", null);
 exports.SupportController = SupportController = __decorate([
     (0, common_1.Controller)('tickets'),
+=======
+    __metadata("design:paramtypes", [create_kb_entry_dto_1.CreateKbEntryDto]),
+    __metadata("design:returntype", void 0)
+], SupportController.prototype, "createKnowledgeBaseEntry", null);
+__decorate([
+    (0, common_1.Get)('knowledge-base'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], SupportController.prototype, "findKnowledgeBase", null);
+exports.SupportController = SupportController = __decorate([
+    (0, common_1.Controller)(),
+>>>>>>> main
     __metadata("design:paramtypes", [support_service_1.SupportService])
 ], SupportController);
 //# sourceMappingURL=support.controller.js.map

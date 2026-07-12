@@ -17,6 +17,7 @@ let SupportService = class SupportService {
     constructor(prisma) {
         this.prisma = prisma;
     }
+<<<<<<< HEAD
     async createTicket(dto) {
         const userId = dto.usuario_id;
         const user = await this.prisma.user.findUnique({ where: { id: userId } });
@@ -187,6 +188,63 @@ let SupportService = class SupportService {
         }
         await this.prisma.knowledgeBase.delete({ where: { id } });
         return { deleted: true };
+=======
+    async createTicket(userId, dto) {
+        return this.prisma.ticket.create({
+            data: {
+                userId,
+                subject: dto.subject,
+                priority: dto.priority ?? 'media',
+                context: dto.context,
+                status: 'abierto',
+            },
+        });
+    }
+    async findTickets(userId) {
+        return this.prisma.ticket.findMany({
+            where: { userId },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+    async findTicketById(userId, ticketId) {
+        const ticket = await this.prisma.ticket.findUnique({
+            where: { id: ticketId },
+            include: {
+                messages: {
+                    orderBy: { createdAt: 'asc' },
+                },
+            },
+        });
+        if (!ticket || ticket.userId !== userId) {
+            throw new common_1.NotFoundException('Ticket no encontrado');
+        }
+        return ticket;
+    }
+    async addTicketMessage(userId, ticketId, dto) {
+        await this.findTicketById(userId, ticketId);
+        return this.prisma.ticketMessage.create({
+            data: {
+                ticketId,
+                role: dto.role ?? 'user',
+                content: dto.content,
+            },
+        });
+    }
+    async createKnowledgeBaseEntry(dto) {
+        return this.prisma.knowledgeBase.create({
+            data: {
+                title: dto.title,
+                content: dto.content,
+                category: dto.category,
+                active: true,
+            },
+        });
+    }
+    async findKnowledgeBase() {
+        return this.prisma.knowledgeBase.findMany({
+            where: { active: true },
+        });
+>>>>>>> main
     }
 };
 exports.SupportService = SupportService;
