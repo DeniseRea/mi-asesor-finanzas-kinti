@@ -1,0 +1,796 @@
+{
+  "name": "telegram + callback",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "procesar-gasto",
+        "options": {}
+      },
+      "id": "28fc8d86-d6b2-41d4-8f7c-a42cf96515b7",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        3072,
+        2032
+      ],
+      "webhookId": "737bd0b1-b60b-47ff-a209-35cdb2d2b859"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "w1",
+              "name": "mensaje",
+              "type": "string",
+              "value": "={{ $json.body.mensaje }}"
+            },
+            {
+              "id": "w2",
+              "name": "usuario_id",
+              "type": "string",
+              "value": "={{ $json.body.usuario_id }}"
+            },
+            {
+              "id": "w3",
+              "name": "origen",
+              "type": "string",
+              "value": "web"
+            },
+            {
+              "id": "w4",
+              "name": "tiene_archivo",
+              "type": "boolean",
+              "value": "={{ ($binary && Object.keys($binary).length > 0) || !!$json.body.archivo_csv }}"
+            },
+            {
+              "id": "w5",
+              "name": "archivo_file_id",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "id": "w6",
+              "name": "timestamp_mensaje",
+              "type": "number",
+              "value": "={{ $json.body.timestamp || Date.now() }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "b6a436ce-dc6f-4235-a354-2dc9479e87f4",
+      "name": "Normalizar (Web)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3296,
+        2032
+      ]
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "ca205a62-2fd5-4d2c-882a-6b755e61d600",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        3072,
+        2320
+      ],
+      "webhookId": "e5f6a7b8-1234-5678-9abc-def012345678",
+      "credentials": {
+        "telegramApi": {
+          "id": "b3T14RjQ1vKpwhaE",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "t1",
+              "name": "mensaje",
+              "type": "string",
+              "value": "={{ $json.message?.text || \"\" }}"
+            },
+            {
+              "id": "t2",
+              "name": "usuario_id",
+              "type": "string",
+              "value": "={{ String($json.message?.chat?.id || \"\") }}"
+            },
+            {
+              "id": "t3",
+              "name": "origen",
+              "type": "string",
+              "value": "telegram"
+            },
+            {
+              "id": "t4",
+              "name": "tiene_archivo",
+              "type": "boolean",
+              "value": "={{ !!$json.message?.document }}"
+            },
+            {
+              "id": "t5",
+              "name": "archivo_file_id",
+              "type": "string",
+              "value": "={{ $json.message?.document?.file_id || \"\" }}"
+            },
+            {
+              "id": "t6",
+              "name": "timestamp_mensaje",
+              "type": "number",
+              "value": "={{ $json.message?.date ? $json.message.date * 1000 : Date.now() }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "c5a0177f-49c9-4423-bcc8-a1cf927e041c",
+      "name": "Normalizar (Telegram)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3296,
+        2320
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tiene_archivo }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "rightValue": ""
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Archivo (CSV)"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Texto"
+        }
+      },
+      "id": "1ce0ecff-4f43-4170-849d-13f6634cf77e",
+      "name": "Director de Tráfico",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        3520,
+        2176
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "aa11bb22-cc33-dd44-ee55-ff6677889900",
+              "leftValue": "={{ $json.origen }}",
+              "rightValue": "telegram",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7cd0f944-4f38-4c6b-834f-7115e6434f71",
+      "name": "¿Es archivo de Telegram?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3744,
+        2032
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.archivo_file_id }}",
+        "additionalFields": {}
+      },
+      "id": "bb37f6ec-e719-4335-9ffc-f2d61451c985",
+      "name": "Descargar Archivo Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3968,
+        1952
+      ],
+      "webhookId": "3ee26153-d5d8-4958-9f34-fac1ec649556",
+      "credentials": {
+        "telegramApi": {
+          "id": "b3T14RjQ1vKpwhaE",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "headerRow": true
+        }
+      },
+      "id": "b1c437bf-9786-4eb2-b066-b868484bf53c",
+      "name": "Leer CSV",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        4192,
+        2032
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const row = $json;\nconst num = (v) => parseFloat(String(v ?? '').replace(',', '.')) || 0;\nlet monto = num(row.monto ?? row.Monto ?? row.importe ?? row.Importe ?? row.valor ?? row.Valor);\nconst credito = num(row.credito ?? row.Credito ?? row.abono ?? row.Abono);\nconst debito = num(row.debito ?? row.Debito ?? row.cargo ?? row.Cargo);\nif (!monto && (credito || debito)) monto = credito - debito;\nconst esIngreso = monto > 0;\nconst usuario_id = $('Director de Tráfico').first().json.usuario_id;\nconst origen = $('Director de Tráfico').first().json.origen;\nreturn {\n  json: {\n    usuario_id,\n    origen,\n    monto: Math.abs(monto),\n    categoria: 'Transaccion bancaria',\n    entidad: row.descripcion ?? row.Descripcion ?? row.concepto ?? row.Concepto ?? row.entidad ?? 'Desconocido',\n    fecha: row.fecha ?? row.Fecha ?? '',\n    tipo: esIngreso ? 'INGRESO' : 'GASTO'\n  }\n};"
+      },
+      "id": "230afe86-2556-4e90-8725-cc95edd0dcde",
+      "name": "Normalizar CSV",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4416,
+        2032
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "movimientos",
+        "options": {}
+      },
+      "id": "734e29cd-dec0-43d2-ae7f-75a70ece513b",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        4640,
+        2032
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const movimientos = $json.movimientos;\nreturn {\n  json: {\n    usuario_id: movimientos[0].usuario_id,\n    origen: movimientos[0].origen,\n    accion: 'CARGA_MASIVA',\n    movimientos: movimientos.map(m => ({\n      monto: m.monto,\n      categoria: m.categoria,\n      entidad: m.entidad,\n      fecha: m.fecha,\n      tipo: m.tipo\n    })),\n    respuesta_chat: `He procesado correctamente los ${movimientos.length} movimientos de tu extracto bancario.`\n  }\n};"
+      },
+      "id": "ace88bd6-b8d0-4ee5-b600-3a22cb515730",
+      "name": "Resumen Carga Masiva",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4864,
+        2032
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Zona horaria fija (ajustar según país de tus usuarios; Colombia no tiene horario de verano)\nconst TZ_OFFSET_HOURS = -5; // America/Bogota\n\nconst baseMs = Number($json.timestamp_mensaje) || Date.now();\nconst localMs = baseMs + TZ_OFFSET_HOURS * 3600 * 1000;\nconst base = new Date(localMs);\n\nfunction addDays(date, days) {\n  const d = new Date(date);\n  d.setUTCDate(d.getUTCDate() + days);\n  return d;\n}\nfunction iso(date) {\n  return date.toISOString().slice(0, 10);\n}\n\nconst fechas = {\n  hoy: iso(base),\n  ayer: iso(addDays(base, -1)),\n  antier: iso(addDays(base, -2)),\n  anteayer: iso(addDays(base, -2)),\n  manana: iso(addDays(base, 1)),\n  pasado_manana: iso(addDays(base, 2)),\n  hace_2_dias: iso(addDays(base, -2)),\n  hace_3_dias: iso(addDays(base, -3)),\n  hace_una_semana: iso(addDays(base, -7)),\n  hace_2_semanas: iso(addDays(base, -14))\n};\n\nreturn {\n  json: {\n    ...$json,\n    fechas_referencia: fechas\n  }\n};"
+      },
+      "id": "d749168e-bdb2-46a0-be9b-de4c376e8fec",
+      "name": "Fechas de Referencia",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3744,
+        2432
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $(\"Director de Tráfico\").item.json.mensaje }}",
+        "options": {
+          "systemMessage": "=Eres Kinti, un asistente financiero experto. Tu tarea es analizar el mensaje del usuario, clasificar su intención y extraer los datos ESTRICTAMENTE en formato JSON plano, SIN texto adicional antes o después, SIN explicaciones, SIN markdown. Tu respuesta debe empezar con { y terminar con }.\n\nTABLA DE FECHAS DE REFERENCIA (usa EXACTAMENTE estos valores, NO calcules fechas tú mismo, solo empareja la expresión temporal del mensaje con el valor correspondiente de esta tabla):\n{{ JSON.stringify($json.fechas_referencia) }}\nSi el usuario no menciona ninguna referencia temporal, usa el valor de \"hoy\".\nSi menciona una fecha explícita (ej. \"5 de marzo\", \"el 20/06\"), ignora la tabla y usa esa fecha literal en formato YYYY-MM-DD.\n\nTu respuesta JSON debe tener siempre 3 llaves principales: \"accion\", \"datos\" y \"respuesta_chat\".\n\nPASO OBLIGATORIO ANTES DE RESPONDER: cuenta cuántos movimientos financieros distintos (gastos y/o ingresos) menciona el usuario en el mensaje. NUNCA omitas ninguno. Si cuentas 2 o más, DEBES usar el formato CARGA_MASIVA.\n\nREGLAS DE CLASIFICACIÓN PARA LA LLAVE \"accion\":\nSi hay UN SOLO movimiento (gasto, pago o compra) -> \"accion\": \"GASTO\".\nSi hay UN SOLO movimiento (ingreso, cobro, salario o venta) -> \"accion\": \"INGRESO\".\nSi es meter dinero a fondos, acciones, cripto o ahorro (un solo movimiento) -> \"accion\": \"INVERSION\".\nSi el usuario reporta un problema, error o pide ayuda -> \"accion\": \"TICKET\".\nSi es una charla que no encaja en lo anterior -> \"accion\": \"OTRO\".\nSi el mensaje menciona 2 O MÁS movimientos financieros -> \"accion\": \"CARGA_MASIVA\". Esta regla tiene PRIORIDAD.\n\nFORMATO CARGA_MASIVA:\n{\n  \"accion\": \"CARGA_MASIVA\",\n  \"total_registros\": N,\n  \"datos\": [\n    { \"monto\": decimal, \"categoria\": \"...\", \"entidad\": \"...\", \"fecha\": \"YYYY-MM-DD\", \"tipo\": \"GASTO\" | \"INGRESO\" }\n  ],\n  \"respuesta_chat\": \"resumen corto de cuántos gastos e ingresos registraste\"\n}\n\nREGLAS PARA EL OBJETO \"datos\" (Si es UN SOLO movimiento):\nSi es GASTO: {\"monto\": decimal, \"categoria\": \"Comida/Transporte/Servicios/Otros\", \"entidad\": \"Nombre del lugar\", \"fecha\": \"YYYY-MM-DD\"}\nSi es INGRESO: {\"monto\": decimal, \"categoria\": \"Salario/Venta/Reembolso/Otros\", \"entidad\": \"Origen del dinero\", \"fecha\": \"YYYY-MM-DD\"}\nSi es INVERSION: {\"monto\": decimal, \"categoria\": \"Acciones/Cripto/Bienes Raices/Ahorro\", \"entidad\": \"Plataforma o Activo\", \"fecha\": \"YYYY-MM-DD\"}\nSi es TICKET: {\"asunto\": \"Resumen corto del problema\", \"prioridad\": \"ALTA/MEDIA/BAJA\"}\nSi es OTRO: {} (objeto vacío)\n\nLa llave \"respuesta_chat\" debe contener tu respuesta conversacional empática para el usuario.\n\nRECUERDA: tu respuesta completa debe ser ÚNICAMENTE el objeto JSON. No agregues \"Aquí está el análisis:\" ni ningún otro texto fuera del JSON."
+        }
+      },
+      "id": "d127cb16-4830-452e-9bb9-61eca5d5625c",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        3968,
+        2432
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "id": "42a2301a-2341-4173-9024-5f53421aff38",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        3984,
+        2656
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "eWIO7O8ktpsgUDQD",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $(\"Director de Tráfico\").item.json.usuario_id }}",
+        "contextWindowLength": 15
+      },
+      "id": "ddd4f297-ae98-424b-8c8f-fb118fad12cf",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        4112,
+        2656
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $(\"Director de Tráfico\").item.json.mensaje }}",
+        "options": {
+          "systemMessage": "=Eres Kinti (Respaldo), un asistente financiero experto. Tu tarea es analizar el mensaje del usuario y extraer los datos ESTRICTAMENTE en formato JSON plano, SIN texto adicional antes o después, SIN explicaciones, SIN markdown. Tu respuesta debe empezar con { y terminar con }.\n\nTABLA DE FECHAS DE REFERENCIA (usa EXACTAMENTE estos valores, NO calcules fechas tú mismo, solo empareja la expresión temporal del mensaje con el valor correspondiente de esta tabla):\n{{ JSON.stringify($json.fechas_referencia) }}\nSi el usuario no menciona ninguna referencia temporal, usa el valor de \"hoy\".\nSi menciona una fecha explícita, ignora la tabla y usa esa fecha literal en formato YYYY-MM-DD.\nSigue las mismas reglas establecidas para analizar GASTO, INGRESO o CARGA_MASIVA.\nEl output debe tener \"accion\", \"datos\" y \"respuesta_chat\"."
+        }
+      },
+      "id": "e8747b89-fc83-410e-9b58-7c16382cfe1e",
+      "name": "AI Agent1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        4320,
+        2544
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "c891c502-05e8-4992-b9db-685cd3edccf4",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        4336,
+        2768
+      ]
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $(\"Director de Tráfico\").item.json.usuario_id }}",
+        "contextWindowLength": 15
+      },
+      "id": "62df7d97-1643-4e7b-992e-6714a00d5acb",
+      "name": "Simple Memory1",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        4464,
+        2768
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// 1. Obtenemos la salida en texto generada por el Agente de IA\nlet raw = $json.output ?? '';\nif (typeof raw !== 'string') raw = JSON.stringify(raw);\n\n// 2. Extraemos el primer bloque {...} del texto, sin importar\n//    si el modelo agregó explicaciones, backticks o texto extra alrededor\nconst match = raw.match(/\\{[\\s\\S]*\\}/);\nif (match) raw = match[0];\nraw = raw.trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch (e) {\n  parsed = { accion: 'OTRO', datos: {}, respuesta_chat: 'No pude entender tu mensaje, ¿puedes reformularlo?' };\n}\n\n// 3. Recuperamos las variables de contexto\nconst usuario_id = $('Director de Tráfico').item.json.usuario_id;\nconst origen = $('Director de Tráfico').item.json.origen;\n\n// 4. Lógica de normalización\nlet movimientosArray = [];\nif (parsed.accion === 'CARGA_MASIVA') {\n  movimientosArray = Array.isArray(parsed.datos) ? parsed.datos : [];\n} else if (parsed.datos && typeof parsed.datos === 'object' && Object.keys(parsed.datos).length > 0) {\n  movimientosArray = [parsed.datos];\n}\n\n// 4b. Si el modelo omitió \"tipo\" en algún movimiento, lo inferimos\n// usando la acción original como pista (GASTO por defecto si no se puede determinar)\nconst tipoPorAccion = { GASTO: 'GASTO', INGRESO: 'INGRESO', INVERSION: 'INVERSION' };\nmovimientosArray = movimientosArray.map(m => ({\n  ...m,\n  tipo: m.tipo || tipoPorAccion[parsed.accion] || 'GASTO'\n}));\n\nreturn {\n  json: {\n    usuario_id: usuario_id,\n    origen: origen,\n    accion: parsed.accion || 'OTRO',\n    movimientos: movimientosArray,\n    respuesta_chat: parsed.respuesta_chat || 'Operación procesada correctamente.'\n  }\n};"
+      },
+      "id": "432c799d-eca6-44db-8b3c-c0c751ddc6ee",
+      "name": "Registrar Gasto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4640,
+        2432
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a5d7cc98-7f83-49de-a714-69b7d47ea135",
+              "leftValue": "={{ $json.origen }}",
+              "rightValue": "telegram",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d7cd6b85-0bc0-456f-8f32-7ff2454c6b9e",
+      "name": "¿Es canal Telegram?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        5088,
+        2432
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3001/api/kinti-webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-kinti-secret",
+              "value": "kinti-secret-12345"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "id": "35a7479b-5061-448b-8202-cac377b8baef",
+      "name": "Callback Backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5088,
+        2224
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.usuario_id }}",
+        "text": "={{ $json.respuesta_chat }}",
+        "additionalFields": {}
+      },
+      "id": "4949b323-727c-4d67-8c93-0c7a01ce8e2a",
+      "name": "Responder Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        5408,
+        2432
+      ],
+      "webhookId": "48c77d0a-047b-4c8f-87ae-0fe0edae9630",
+      "credentials": {
+        "telegramApi": {
+          "id": "b3T14RjQ1vKpwhaE",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalizar (Web)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar (Web)": {
+      "main": [
+        [
+          {
+            "node": "Director de Tráfico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalizar (Telegram)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar (Telegram)": {
+      "main": [
+        [
+          {
+            "node": "Director de Tráfico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Director de Tráfico": {
+      "main": [
+        [
+          {
+            "node": "¿Es archivo de Telegram?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fechas de Referencia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fechas de Referencia": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es archivo de Telegram?": {
+      "main": [
+        [
+          {
+            "node": "Descargar Archivo Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leer CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargar Archivo Telegram": {
+      "main": [
+        [
+          {
+            "node": "Leer CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer CSV": {
+      "main": [
+        [
+          {
+            "node": "Normalizar CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar CSV": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Resumen Carga Masiva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resumen Carga Masiva": {
+      "main": [
+        [
+          {
+            "node": "Callback Backend",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "¿Es canal Telegram?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Registrar Gasto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Registrar Gasto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar Gasto": {
+      "main": [
+        [
+          {
+            "node": "Callback Backend",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "¿Es canal Telegram?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es canal Telegram?": {
+      "main": [
+        [
+          {
+            "node": "Responder Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6849d94a-b826-4eea-8674-93d15fc5736f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3bf66cd19e378eb52e15e9b1edbfc4b1956ce94d2e89ff0bc120aba6920ef8de"
+  },
+  "id": "Rz6dJu6Ucl6YvOMN",
+  "tags": []
+}

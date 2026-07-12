@@ -6,6 +6,7 @@ import { TransactionsModule } from './modules/transactions/transactions.module';
 import { BudgetsModule } from './modules/budgets/budgets.module';
 import { AlertsModule } from './modules/alerts/alerts.module';
 import { SupportModule } from './modules/support/support.module';
+import { KintiModule } from './modules/kinti/kinti.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { SupportModule } from './modules/support/support.module';
     BudgetsModule,
     AlertsModule,
     SupportModule,
+    KintiModule,
   ],
 })
 export class AppModule {}
