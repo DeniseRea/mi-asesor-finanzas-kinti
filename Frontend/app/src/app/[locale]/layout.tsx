@@ -1,12 +1,5 @@
 import './globals.css';
-import { Inter } from 'next/font/google';
 import { Providers } from '@/app/Providers';
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-sans',
-  display: 'swap',
-});
 
 import { Metadata } from 'next';
 
@@ -25,7 +18,7 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
   const currentLocale = (locale === 'en' ? 'en' : 'es') as 'es' | 'en';
 
   return (
-    <html lang={currentLocale} className={inter.variable}>
+    <html lang={currentLocale}>
       <body>
         <Providers>{children}</Providers>
       </body>

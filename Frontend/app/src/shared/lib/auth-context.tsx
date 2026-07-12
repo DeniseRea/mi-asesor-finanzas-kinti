@@ -14,6 +14,7 @@ interface AuthContextValue {
   login: (data: LoginRequest) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
+  enterDemo: () => void;
   logout: () => void;
 }
 
@@ -24,6 +25,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const demoMode = typeof window !== 'undefined' && localStorage.getItem('kinti_demo') === 'true';
+    if (demoMode) {
+      queueMicrotask(() => {
+        setUser({ id: 'demo-user', name: 'María Demo', email: 'demo@kinti.app' });
+        setIsLoading(false);
+      });
+      return;
+    }
     const token = getStoredToken();
     if (!token) {
       queueMicrotask(() => setIsLoading(false));
@@ -67,11 +76,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     removeToken();
+    localStorage.removeItem('kinti_demo');
     setUser(null);
   };
 
+  const enterDemo = () => {
+    localStorage.setItem('kinti_demo', 'true');
+    setUser({ id: 'demo-user', name: 'María Demo', email: 'demo@kinti.app' });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, isAuthenticated: !!user, login, loginWithGoogle, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, isAuthenticated: !!user, login, loginWithGoogle, register, enterDemo, logout }}>
       {children}
     </AuthContext.Provider>
   );

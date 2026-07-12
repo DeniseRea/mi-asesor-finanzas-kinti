@@ -10,5 +10,5 @@ export default async function Page({ params }: PageProps) {
   const currentLocale = (locale === 'en' ? 'en' : 'es') as 'es' | 'en';
   const dict = getHomeDictionary(currentLocale);
 
-  return <Home dict={dict} />;
+  return <Home dict={dict} locale={currentLocale} />;
 }
