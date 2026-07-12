@@ -4,7 +4,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '@/shared/lib/firebase';
 import { apiClient, storeToken, getStoredToken, removeToken } from '@/shared/api/apiClient';
-import type { LoginRequest, LoginResponse, RegisterRequest, ProfileResponse } from '@/shared/api/types';
+import type { LoginRequest, LoginResponse, RegisterRequest, ProfileResponse, VerifyEmailRequest, VerifyEmailResponse, ResendVerificationRequest, ResendVerificationResponse, LogoutResponse } from '@/shared/api/types';
 import type { User } from '@entities/user/model/types';
 
 interface AuthContextValue {
@@ -14,7 +14,9 @@ interface AuthContextValue {
   login: (data: LoginRequest) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
-  logout: () => void;
+  verifyEmail: (data: VerifyEmailRequest) => Promise<VerifyEmailResponse>;
+  resendVerification: (data: ResendVerificationRequest) => Promise<ResendVerificationResponse>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -65,13 +67,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const logout = () => {
+  const verifyEmail = async (data: VerifyEmailRequest): Promise<VerifyEmailResponse> => {
+    return apiClient<VerifyEmailResponse>('/api/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  };
+
+  const resendVerification = async (data: ResendVerificationRequest): Promise<ResendVerificationResponse> => {
+    return apiClient<ResendVerificationResponse>('/api/auth/resend-verification', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  };
+
+  const logout = async () => {
+    try {
+      await apiClient<LogoutResponse>('/api/auth/logout', { method: 'POST' });
+    } catch {
+      // Logout local aunque falle el server
+    }
     removeToken();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, isAuthenticated: !!user, login, loginWithGoogle, register, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, isAuthenticated: !!user, login, loginWithGoogle, register, verifyEmail, resendVerification, logout }}>
       {children}
     </AuthContext.Provider>
   );

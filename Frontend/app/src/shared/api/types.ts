@@ -35,3 +35,24 @@ export interface ProfileResponse {
   phone?: string;
   currency?: string;
 }
+
+export interface VerifyEmailRequest {
+  email: string;
+  code: string;
+}
+
+export interface VerifyEmailResponse {
+  message: string;
+}
+
+export interface ResendVerificationRequest {
+  email: string;
+}
+
+export interface ResendVerificationResponse {
+  message: string;
+}
+
+export interface LogoutResponse {
+  message: string;
+}

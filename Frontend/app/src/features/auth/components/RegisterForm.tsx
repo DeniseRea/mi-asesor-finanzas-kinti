@@ -57,7 +57,7 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { loginWithGoogle } = useAuth();
+  const { register, loginWithGoogle, verifyEmail, resendVerification } = useAuth();
   const router = useRouter();
 
   const handleGoogleLogin = async () => {
@@ -73,7 +73,7 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
     }
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
     const form = event.currentTarget;
@@ -89,7 +89,28 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
 
     if (!form.reportValidity()) return;
 
-    setStep('verification');
+    setIsSubmitting(true);
+    try {
+      const normalizedEmail = normalizeEmail(email);
+      setEmail(normalizedEmail);
+      await register({ name, email: normalizedEmail, password, confirmPassword: confirmation });
+      setStep('verification');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al crear la cuenta');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleVerify = async (code: string) => {
+    const normalizedEmail = normalizeEmail(email);
+    await verifyEmail({ email: normalizedEmail, code });
+    router.push(`/${locale}/login`);
+  };
+
+  const handleResend = async () => {
+    const normalizedEmail = normalizeEmail(email);
+    await resendVerification({ email: normalizedEmail });
   };
 
   if (step === 'verification') {
@@ -103,7 +124,8 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
         resendLabel={dict.verification.resend}
         changeEmailLabel={dict.verification.changeEmail}
         invalidCodeMessage={dict.verification.invalidCode}
-        onVerify={() => router.push(`/${locale}/login`)}
+        onVerify={handleVerify}
+        onResend={handleResend}
         onChangeEmail={() => setStep('details')}
       />
     );

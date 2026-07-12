@@ -8,19 +8,29 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String?
-  phone     String?
-  currency  String   @default("USD")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                   String    @id @default(uuid())
+  name                 String
+  email                String    @unique
+  password             String?
+  phone                String?
+  currency             String    @default("USD")
+  emailVerified        Boolean   @default(false)
+  verificationCode     String?
+  verificationExpires  DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
 
   transactions Transaction[]
   budgets      Budget[]
   alerts       Alert[]
   tickets      Ticket[]
+}
+
+model RevokedToken {
+  id        String   @id @default(uuid())
+  tokenJti  String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 model Transaction {
