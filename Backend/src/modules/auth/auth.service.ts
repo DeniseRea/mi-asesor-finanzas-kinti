@@ -120,6 +120,11 @@ export class AuthService {
           emailVerified: true,
         },
       });
+    } else if (!user.emailVerified) {
+      user = await this.prisma.user.update({
+        where: { id: user.id },
+        data: { emailVerified: true },
+      });
     }
 
     const token = this.generateToken(user);
@@ -171,7 +176,8 @@ export class AuthService {
     }
 
     if (user.verificationExpires) {
-      const cooldownEnd = new Date(user.verificationExpires.getTime() - 15 * 60 * 1000 + 60 * 1000);
+      const codeCreatedAt = new Date(user.verificationExpires.getTime() - 15 * 60 * 1000);
+      const cooldownEnd = new Date(codeCreatedAt.getTime() + 60 * 1000);
       if (new Date() < cooldownEnd) {
         throw new BadRequestException('Espera 60 segundos antes de solicitar un nuevo código');
       }
@@ -211,7 +217,7 @@ export class AuthService {
     if (!user) {
       throw new UnauthorizedException('Usuario no encontrado');
     }
-    return { id: user.id, name: user.name, email: user.email, phone: user.phone, currency: user.currency };
+    return { id: user.id, name: user.name, email: user.email, phone: user.phone, currency: user.currency, emailVerified: user.emailVerified };
   }
 
   async updateProfile(userId: string, data: { phone?: string; currency?: string }) {
@@ -229,7 +235,7 @@ export class AuthService {
   }
 
   private generateVerificationCode(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+    return crypto.randomInt(100000, 999999).toString();
   }
 
   private async cleanupExpiredTokens() {

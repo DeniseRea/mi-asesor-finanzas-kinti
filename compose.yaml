@@ -17,7 +17,7 @@ services:
 
   backend:
     build:
-      context: .
+      context: ./Backend
       dockerfile: Dockerfile.dev
     ports:
       - "3001:3001"
@@ -31,9 +31,30 @@ services:
       FIREBASE_PROJECT_ID: "mi-asesor-finanzas-kinti-bc176"
       FIREBASE_CLIENT_EMAIL: "firebase-adminsdk-fbsvc@mi-asesor-finanzas-kinti-bc176.iam.gserviceaccount.com"
       FIREBASE_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDtucyxkaEJ1L8M\nX8ZNgRhiYzUzJvvtPlO68j7mVGj0SU3AawP483mKoCs3TNJWhn/lQKE5rIqkqTkm\nKnx6m566maL2HgmeihFUfJTCRAtJw7ctOa6A+L4kfl0t1Dw8nd9+1pr0zYHakqe7\nY4bzEFuSl3vBHi1Y4P7MY4xyLFv00IBQmkvWo/gRA8xNr7yypoX9HE8fT6UqQZo2\nrSeXi4vygt7tObkJSP/+jG3EGs+gyHFHKt1ZmKf7gyy5SbMWAYdbEr1OJckl2vQa\nJwRQ6by8m7E9U4w/56hFfmcRsidrv5SrB2L8Y6FZDP8+ZGdG+yhMwIkhF5hwNQCu\nrNx0j4YzAgMBAAECggEAAzTiYfLI7U0FVrFkB1+aaJlV+l6oP0b78iWaW5j/4Wur\ntNC8uPrvxMLsUk6i96/QwdLhWdnN9PKjZrRkAXNf7LxtykwVbSIHodAcYZJxZIlT\nSzTf+bVhOzTJJPkb5uVqQle6t1qeSch4orpw845g7dVFQhGaIvzF8xPUrSWUB/VR\nXZFcY1/3nGKvJd785oUhH/ueln4OALiBz/eMjfkfkSv9fpW5JkkM2gE2Rs4E5p8T\noHHn9tuFAa3AmJFZ2+JjsaVR/ptKqnAh4yH4en6OpRl++CpUqNtYq9EJdE8NObdy\nMg1X40yaplOgKWRcOyFHgkZ8rh5adimjOT+B8VjQoQKBgQD8k1CCbzQ9ZR5SRbJx\nYH474MJYJXSPlLJsd26FN6+eoC00BBHAR4c+LwBiTh5WTmtNHH5N3YOniB9ljCih\nom75XR+L7kfeUt5G4tP306FjtI22ZHy86XVDL3euJE5ykw9rO5RK02xuRevPg3hg\neiWB+lhtdDd91Ab2wJG/XnRY7wKBgQDw8vEvIKxCGUbqO39jNcTFu/21fuHkIP7O\nn5MLWGxHAokFrSW7XFdv1w7b9nrSVK/kmEaBXPSbU1CV2lIs5QVbA3K3xEXNXS5k\nc5nSb6lSLj1z/rBYQsC4uy29K8uD+O2UuuCT623yg/229wGQyz0jjhBf2APYbvmC\nuTAy2RJ+/QKBgASBWDFLbIIf2J+dEKbHEtlck/rgiCi7fUdEBhuoN6C7uLKx0+M7\nI2VvjzExtYbSlUVl2bbn2Z5WZkD4dA0WCaa3C4YCdRO5JK/dAezswHc31ENJnZP9\nEhNluFvJ2ABhMSg3gtim1stMwf0MmkwWQa8E2Sjypr6+1nT2UGM6exbPAoGBANkJ\nbNkPrDqp/CfXSir6bvHSIXmP/jf4xK0oLlLk5jucfAKB8d/wEM6sQDVAs2esYvgd\ndjzml2smRAuHqcfIz+colvgTMvEGg1h2jNNyQ2nEPxSyEPSfxGtiJ5Qj0+Ffo9n5\n73sucU4nOK3Llzxu5faV7Af5U5VseRIYb+MNh0ydAoGBAMNb+6Pfnv4fyBr+K2iQ\nvq4SLb7M+s9+xRT2eEcoF3HpLmRmVr/aD+TxTLgYo7ZkDC7wa0SiiSpZ3ltUUvbg\nybGOiabuKxDdnJvv/ThFHWB2XeRbXv+xpnnSCIN5AoVYdpgVaZVE+EBVK62EZ0mP\nkmJWp0VOMagL8iFWlb+HMGmV\n-----END PRIVATE KEY-----\n"
+      SMTP_EMAIL: "noreply.kinti@gmail.com"
+      SMTP_PASSWORD: "hscwfesrpqgsbjjk"
     volumes:
-      - .:/app
+      - ./Backend:/app
       - /app/node_modules
+
+  frontend:
+    build:
+      context: ./Frontend/app
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:3001"
+      NEXT_PUBLIC_FIREBASE_API_KEY: "AIzaSyBP9HP9nhFWSopmFfchfHipdStLzti2kDk"
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "mi-asesor-finanzas-kinti-bc176.firebaseapp.com"
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: "mi-asesor-finanzas-kinti-bc176"
+      NEXT_PUBLIC_FIREBASE_APP_ID: "1:217942834855:web:635f4727ce108975f76582"
+    volumes:
+      - ./Frontend/app:/app
+      - /app/node_modules
+      - /app/.next
 
 volumes:
   pgdata:
