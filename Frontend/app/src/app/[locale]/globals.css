@@ -165,10 +165,21 @@ html {
   color: #cbd5e1;
 }
 
-.dark #analitica h2,
-.dark #seguridad h2,
 .dark .landing-page footer .text-emerald-950 {
   color: #d1fae5;
+}
+
+.dark .landing-section-heading > h2 {
+  color: #064e3b;
+}
+
+.dark #producto .landing-section-heading > span,
+.dark #analitica .landing-section-heading > span {
+  color: #065f46;
+}
+
+.dark .landing-section-heading > p {
+  color: #164e43;
 }
 
 @keyframes landing-copy-enter {
