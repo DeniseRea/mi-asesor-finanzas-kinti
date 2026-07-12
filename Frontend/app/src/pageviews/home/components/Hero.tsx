@@ -12,7 +12,7 @@ export function Hero({ dict }: HeroProps) {
         ✨ {dict.subtitle}
       </div>
       
-      <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-gradient-to-r from-white via-indigo-200 to-indigo-400 bg-clip-text text-transparent mb-6">
+      <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-linear-to-r from-white via-indigo-200 to-indigo-400 bg-clip-text text-transparent mb-6">
         {dict.title}
       </h1>
       
