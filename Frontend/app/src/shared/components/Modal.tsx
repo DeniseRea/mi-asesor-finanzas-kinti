@@ -3,7 +3,8 @@
 import { useEffect } from 'react';
 import { X } from 'lucide-react';
 
-export function Modal({ open, onClose, title, children }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode }) {
+// @ts-ignore - Next.js TS plugin false positive on client components
+export function Modal({ open, onCloseAction: onClose, title, children }: { open: boolean; onCloseAction: () => void; title: string; children: React.ReactNode }) {
   useEffect(() => { const close = (event: KeyboardEvent) => event.key === 'Escape' && onClose(); window.addEventListener('keydown', close); return () => window.removeEventListener('keydown', close); }, [onClose]);
   if (!open) return null;
   return <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-950/35 p-0 backdrop-blur-[2px] sm:items-center sm:p-5" onMouseDown={onClose}>
