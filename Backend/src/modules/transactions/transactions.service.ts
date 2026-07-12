@@ -1,11 +1,15 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
+import { AlertsService } from '../alerts/alerts.service';
 import * as Papa from 'papaparse';
 
 @Injectable()
 export class TransactionsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private alertsService: AlertsService,
+  ) {}
 
   async create(dto: CreateTransactionDto) {
     const userId = dto.usuario_id;
@@ -30,6 +34,20 @@ export class TransactionsService {
         confirmed: true,
       },
     });
+
+    // Si es un gasto/egreso, evaluar alertas de presupuestos
+    if (transaction.type === 'GASTO' || transaction.type === 'expense' || transaction.type === 'gasto') {
+      try {
+        await this.alertsService.onTransactionCreated({
+          userId: transaction.userId,
+          category: transaction.category,
+          amount: transaction.amount,
+          date: transaction.date,
+        });
+      } catch (error) {
+        console.error('Error al generar alerta de presupuesto:', error);
+      }
+    }
 
     return {
       id: transaction.id,
