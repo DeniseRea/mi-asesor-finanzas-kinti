@@ -1,5 +1,0 @@
-<<<<<<< HEAD
-{"version":3,"file":"create-ticket.dto.js","sourceRoot":"","sources":["../../../../src/modules/support/dto/create-ticket.dto.ts"],"names":[],"mappings":";;;;;;;;;;;;AAAA,qDAAsF;AAGtF,MAAa,eAAe;IAG1B,UAAU,CAAU;IAGpB,MAAM,CAAS;IAIf,QAAQ,CAAU;CACnB;AAXD,0CAWC;AARC;IAFC,IAAA,0BAAQ,GAAE;IACV,IAAA,4BAAU,GAAE;;mDACO;AAGpB;IADC,IAAA,0BAAQ,GAAE;;+CACI;AAIf;IAFC,IAAA,0BAAQ,GAAE;IACV,IAAA,4BAAU,GAAE;;iDACK;AAGpB,MAAa,sBAAsB;IAGjC,UAAU,CAAU;IAGpB,SAAS,CAAS;IAGlB,GAAG,CAAkC;CACtC;AAVD,wDAUC;AAPC;IAFC,IAAA,0BAAQ,GAAE;IACV,IAAA,4BAAU,GAAE;;0DACO;AAGpB;IADC,IAAA,0BAAQ,GAAE;;yDACO;AAGlB;IADC,IAAA,sBAAI,EAAC,CAAC,SAAS,EAAE,QAAQ,EAAE,QAAQ,CAAC,CAAC;;mDACD"}
-=======
-{"version":3,"file":"create-ticket.dto.js","sourceRoot":"","sources":["../../../../src/modules/support/dto/create-ticket.dto.ts"],"names":[],"mappings":";;;AAAA,MAAa,eAAe;IAC1B,OAAO,CAAS;IAChB,QAAQ,CAAU;IAClB,OAAO,CAAU;CAClB;AAJD,0CAIC"}
->>>>>>> main
