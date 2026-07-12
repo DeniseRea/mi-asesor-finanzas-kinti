@@ -1,5 +1,5 @@
 export type TransactionType = 'income' | 'expense';
-export type TransactionOrigin = 'WhatsApp' | 'Manual' | 'CSV' | 'Assistant';
+export type TransactionOrigin = 'Telegram' | 'Manual' | 'CSV' | 'Assistant';
 
 export interface Transaction {
   id: string;

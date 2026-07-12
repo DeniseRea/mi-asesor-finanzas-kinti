@@ -22,19 +22,49 @@
 .dark input::placeholder,
 .dark textarea::placeholder { color: #64748b; }
 .dark .bg-emerald-50 { background-color: rgb(6 78 59 / 28%); }
+.dark .bg-emerald-100 { background-color: rgb(6 95 70 / 48%); }
 .dark .bg-lime-50 { background-color: rgb(54 83 20 / 25%); }
 .dark .bg-violet-50 { background-color: rgb(76 29 149 / 24%); }
+.dark .bg-violet-100 { background-color: rgb(91 33 182 / 42%); }
 .dark .bg-blue-50 { background-color: rgb(30 64 175 / 22%); }
+.dark .bg-blue-100 { background-color: rgb(30 64 175 / 38%); }
 .dark .bg-orange-50 { background-color: rgb(154 52 18 / 22%); }
+.dark .bg-orange-100 { background-color: rgb(154 52 18 / 38%); }
 .dark .bg-rose-50 { background-color: rgb(159 18 57 / 22%); }
+.dark .bg-rose-100 { background-color: rgb(159 18 57 / 38%); }
 .dark .bg-slate-100 { background-color: #1e293b; }
 .dark .text-emerald-950,
 .dark .text-emerald-900,
 .dark .text-emerald-800 { color: #a7f3d0; }
-.dark .text-violet-900 { color: #ddd6fe; }
-.dark .text-rose-700 { color: #fda4af; }
+.dark .text-emerald-700,
+.dark .text-emerald-600 { color: #6ee7b7; }
+.dark .text-blue-700,
+.dark .text-blue-600 { color: #93c5fd; }
+.dark .text-violet-900,
+.dark .text-violet-700,
+.dark .text-violet-600 { color: #c4b5fd; }
+.dark .text-rose-700,
+.dark .text-rose-600 { color: #fda4af; }
 .dark .text-orange-700,
 .dark .text-orange-600 { color: #fdba74; }
+.dark [class*='from-emerald-50'][class*='to-lime-50'] {
+  background-image: linear-gradient(145deg, rgb(6 78 59 / 32%), rgb(54 83 20 / 24%));
+}
+.dark [class*='from-violet-50'][class*='to-blue-50'] {
+  background-image: linear-gradient(145deg, rgb(76 29 149 / 28%), rgb(30 64 175 / 24%));
+}
+.dark [class*='bg-emerald-300'][class*='text-emerald-950'],
+.dark [class*='bg-lime-300'][class*='text-emerald-950'] {
+  color: #052e22;
+}
+.dark [role='switch'] .bg-white {
+  background-color: #fff;
+}
+.dark #producto article [class*='bg-white/50'] {
+  border-color: rgb(110 231 183 / 35%);
+  background-color: rgb(2 44 34 / 88%);
+  color: #a7f3d0;
+}
 .dark .recharts-cartesian-grid line { stroke: #334155; }
 .dark .recharts-text { fill: #94a3b8; }
 .dark .recharts-default-tooltip {
@@ -95,6 +125,51 @@ html {
 .landing-float { animation: landing-float 5.5s ease-in-out infinite; }
 .landing-float-delayed { animation: landing-float 6.5s 1.2s ease-in-out infinite; }
 .landing-spin-slow { animation: landing-spin 28s linear infinite; }
+
+.dark #seguridad {
+  background-color: #0a2119;
+}
+
+.dark .landing-page > section[aria-label='Beneficios'] {
+  border-color: rgb(255 255 255 / 8%);
+  background-color: rgb(6 78 59 / 22%);
+}
+
+.dark #producto article {
+  border-color: rgb(255 255 255 / 9%);
+  background-image: linear-gradient(145deg, rgb(15 46 35 / 96%), rgb(18 37 48 / 94%));
+}
+
+.dark #analitica [class*='bg-white/90'],
+.dark #seguridad [class*='bg-white/75'] {
+  border-color: rgb(255 255 255 / 10%);
+  background-color: rgb(15 23 42 / 88%);
+}
+
+.dark .landing-hero [class*='bg-white/'] {
+  background-color: rgb(15 23 42 / 82%);
+}
+
+.dark .landing-hero [class*='border-white'] {
+  border-color: rgb(255 255 255 / 12%);
+}
+
+.dark .landing-hero button [class*='bg-emerald-100'] {
+  background-color: #a7f3d0;
+  color: #064e3b;
+}
+
+.dark #producto article p,
+.dark #analitica p,
+.dark #seguridad p {
+  color: #cbd5e1;
+}
+
+.dark #analitica h2,
+.dark #seguridad h2,
+.dark .landing-page footer .text-emerald-950 {
+  color: #d1fae5;
+}
 
 @keyframes landing-copy-enter {
   from { opacity: 0; transform: translate3d(0, 34px, 0); filter: blur(8px); }

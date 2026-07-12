@@ -18,5 +18,5 @@ export function ParticleField() {
     resize(); draw(); window.addEventListener('resize', resize); parent.addEventListener('pointermove', move); parent.addEventListener('pointerleave', leave);
     return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', resize); parent.removeEventListener('pointermove', move); parent.removeEventListener('pointerleave', leave); };
   }, []);
-  return <canvas ref={canvasRef} aria-hidden="true" className="pointer-events-none absolute inset-0 z-0"/>;
+  return <canvas ref={canvasRef} aria-hidden="true" className="pointer-events-none absolute inset-0 z-[4]"/>;
 }

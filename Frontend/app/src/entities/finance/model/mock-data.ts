@@ -3,12 +3,12 @@ import type { AssistantMessage, Budget, Notification, SupportTicket, Transaction
 export const categories = ['Comida', 'Transporte', 'Servicios', 'Entretenimiento', 'Salud', 'Educación', 'Otros'];
 
 export const initialTransactions: Transaction[] = [
-  { id: 'mov-1', description: 'Compra de víveres', merchant: 'Supermercado Santa María', category: 'Comida', type: 'expense', amount: 45.2, date: '2026-07-10T10:30:00', origin: 'WhatsApp' },
-  { id: 'mov-2', description: 'Viaje al trabajo', merchant: 'Uber', category: 'Transporte', type: 'expense', amount: 12.5, date: '2026-07-10T09:15:00', origin: 'WhatsApp' },
+  { id: 'mov-1', description: 'Compra de víveres', merchant: 'Supermercado Santa María', category: 'Comida', type: 'expense', amount: 45.2, date: '2026-07-10T10:30:00', origin: 'Telegram' },
+  { id: 'mov-2', description: 'Viaje al trabajo', merchant: 'Uber', category: 'Transporte', type: 'expense', amount: 12.5, date: '2026-07-10T09:15:00', origin: 'Telegram' },
   { id: 'mov-3', description: 'Suscripción mensual', merchant: 'Netflix', category: 'Entretenimiento', type: 'expense', amount: 9.99, date: '2026-07-09T20:00:00', origin: 'Manual' },
   { id: 'mov-4', description: 'Pago de nómina', merchant: 'Salario', category: 'Ingresos', type: 'income', amount: 1500, date: '2026-07-09T09:00:00', origin: 'CSV' },
   { id: 'mov-5', description: 'Cappuccino', merchant: 'Café de la esquina', category: 'Comida', type: 'expense', amount: 4.5, date: '2026-07-08T16:20:00', origin: 'Manual' },
-  { id: 'mov-6', description: 'Medicinas', merchant: 'Farmacia Cruz Azul', category: 'Salud', type: 'expense', amount: 23.9, date: '2026-07-08T12:30:00', origin: 'WhatsApp' },
+  { id: 'mov-6', description: 'Medicinas', merchant: 'Farmacia Cruz Azul', category: 'Salud', type: 'expense', amount: 23.9, date: '2026-07-08T12:30:00', origin: 'Telegram' },
   { id: 'mov-7', description: 'Pago por diseño', merchant: 'Freelance Project', category: 'Ingresos', type: 'income', amount: 650, date: '2026-07-07T19:45:00', origin: 'Manual' },
   { id: 'mov-8', description: 'Factura de electricidad', merchant: 'Empresa Eléctrica', category: 'Servicios', type: 'expense', amount: 145, date: '2026-07-06T14:00:00', origin: 'CSV' },
   { id: 'mov-9', description: 'Cena familiar', merchant: 'La Terraza', category: 'Comida', type: 'expense', amount: 360.3, date: '2026-07-05T20:10:00', origin: 'Manual' },
