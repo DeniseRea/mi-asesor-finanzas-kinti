@@ -1,29 +1,38 @@
-import { Button } from '@shared/components/Button';
+'use client';
+
+import { useRef } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { ArrowDown, ArrowRight, Check, MessageCircle, ShieldCheck, Sparkles, TrendingUp, WalletCards } from 'lucide-react';
 import type { HomeDictionary } from '@/shared/i18n/dictionaries/home';
+import { ParticleField } from './ParticleField';
 
-interface HeroProps {
-  dict: HomeDictionary;
-}
-
-export function Hero({ dict }: HeroProps) {
-  return (
-    <section className="flex-1 flex flex-col items-center justify-center text-center px-4 max-w-3xl mx-auto">
-      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 text-sm font-medium mb-6">
-        ✨ {dict.subtitle}
+export function Hero({ dict, locale, onDemoAction }: { dict: HomeDictionary; locale: 'es' | 'en'; onDemoAction: () => void }) {
+  const visualRef = useRef<HTMLDivElement>(null);
+  const tilt = (event: React.PointerEvent<HTMLDivElement>) => { const node = visualRef.current; if (!node || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; const box = node.getBoundingClientRect(); const x = (event.clientX-box.left)/box.width-.5; const y = (event.clientY-box.top)/box.height-.5; node.style.setProperty('--landing-rx', `${-y*7}deg`); node.style.setProperty('--landing-ry', `${x*9}deg`); };
+  const reset = () => { visualRef.current?.style.setProperty('--landing-rx','0deg'); visualRef.current?.style.setProperty('--landing-ry','0deg'); };
+  return <section className="relative min-h-[100svh] overflow-hidden bg-[radial-gradient(circle_at_78%_28%,rgba(183,228,199,.72),transparent_30%),radial-gradient(circle_at_13%_15%,rgba(245,225,177,.5),transparent_27%),linear-gradient(145deg,#fbfcf6_0%,#f0f7ef_52%,#e5f2e8_100%)] pt-32 sm:pt-36">
+    <ParticleField/><div aria-hidden="true" className="absolute -left-24 top-1/3 size-80 rounded-full bg-amber-200/25 blur-3xl"/><div aria-hidden="true" className="absolute -right-24 bottom-10 size-96 rounded-full bg-emerald-300/25 blur-3xl"/>
+    <div className="relative z-10 mx-auto grid w-[min(92%,86rem)] items-center gap-12 pb-20 lg:min-h-[calc(100svh-9rem)] lg:grid-cols-[.92fr_1.08fr] lg:gap-8">
+      <div className="landing-hero-copy"><div className="mb-6 inline-flex items-center gap-2 rounded-full border border-emerald-200/80 bg-white/65 px-3.5 py-2 text-xs font-bold uppercase tracking-[.13em] text-emerald-800 shadow-sm backdrop-blur"><Sparkles size={15}/>{dict.eyebrow}</div>
+        <h1 className="max-w-3xl font-[family-name:var(--font-display)] text-[clamp(3.5rem,7vw,7rem)] font-medium leading-[.88] tracking-[-.065em] text-[#063d2e]">{dict.title}</h1>
+        <p className="mt-7 max-w-xl text-[clamp(1.2rem,2vw,1.75rem)] font-semibold leading-tight tracking-[-.025em] text-emerald-800">{dict.heroAccent}</p>
+        <p className="mt-4 max-w-xl text-base leading-7 text-slate-600 sm:text-lg">{dict.heroSupport}</p>
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row"><Link href={`/${locale}/register`} className="group flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-[#075b40] px-6 text-base font-bold text-white shadow-[0_16px_35px_rgba(7,91,64,.22)] hover:-translate-y-1 hover:bg-[#064c36]">{dict.startFree}<ArrowRight className="transition-transform group-hover:translate-x-1" size={19}/></Link><button onClick={onDemoAction} className="flex min-h-14 items-center justify-center gap-3 rounded-2xl border border-emerald-200 bg-white/75 px-6 text-base font-bold text-emerald-900 shadow-sm backdrop-blur hover:-translate-y-1 hover:border-emerald-300 hover:bg-white"><span className="grid size-7 place-items-center rounded-full bg-emerald-100"><ArrowRight size={15}/></span>{dict.viewDemo}</button></div>
+        <div className="mt-7 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-500">{dict.heroBenefits.map((item) => <span key={item} className="flex items-center gap-1.5"><Check size={15} className="text-emerald-700"/>{item}</span>)}</div>
       </div>
-      
-      <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight bg-linear-to-r from-white via-indigo-200 to-indigo-400 bg-clip-text text-transparent mb-6">
-        {dict.title}
-      </h1>
-      
-      <p className="text-lg text-slate-400 mb-8 leading-relaxed">
-        {dict.description}
-      </p>
-
-      <div className="flex gap-4">
-        <Button variant="primary">{dict.startFree}</Button>
-        <Button variant="secondary">{dict.viewDemo}</Button>
+      <div onPointerMove={tilt} onPointerLeave={reset} className="relative mx-auto w-full max-w-[43rem] [perspective:1200px]">
+        <div ref={visualRef} className="landing-hero-visual relative aspect-[1.08] w-full transition-transform duration-300 ease-out [transform:rotateX(var(--landing-rx,0deg))_rotateY(var(--landing-ry,0deg))]">
+          <div aria-hidden="true" className="absolute inset-[7%] rounded-full border border-emerald-700/10"/><div aria-hidden="true" className="absolute inset-[15%] rounded-full border border-dashed border-emerald-700/15 landing-spin-slow"/>
+          <div className="absolute left-[8%] top-[13%] z-20 rounded-2xl border border-white/80 bg-white/78 p-4 shadow-[0_24px_70px_rgba(6,61,46,.13)] backdrop-blur-xl landing-float"><div className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-full bg-emerald-100 text-emerald-700"><WalletCards size={19}/></span><span><small className="block text-slate-500">{dict.balance}</small><strong className="text-xl text-slate-950">$2,533.61</strong></span></div><div className="mt-3 flex items-end gap-1">{[18,26,22,35,31,44,39,52,49,63].map((height,index) => <i key={index} className="w-2 rounded-full bg-emerald-500/70" style={{height}}/>)}</div></div>
+          <div className="absolute bottom-[14%] left-[3%] z-30 rounded-2xl border border-white/90 bg-white/82 px-4 py-3 shadow-[0_20px_60px_rgba(6,61,46,.12)] backdrop-blur-xl landing-float-delayed"><div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-full bg-orange-100 text-orange-700"><TrendingUp size={17}/></span><span><small className="block text-slate-500">{dict.savings}</small><strong className="text-lg">38%</strong></span><span className="ml-3 text-xs font-bold text-emerald-700">+6 p.p.</span></div></div>
+          <div className="absolute right-[3%] top-[24%] z-30 max-w-[15rem] rounded-2xl border border-white/90 bg-white/82 p-4 shadow-[0_20px_60px_rgba(6,61,46,.12)] backdrop-blur-xl landing-float-delayed"><div className="flex gap-3"><span className="grid size-9 shrink-0 place-items-center rounded-full bg-violet-100 text-violet-700"><MessageCircle size={17}/></span><p className="text-sm font-semibold leading-5 text-slate-700">“{dict.assistant.example}”</p></div><div className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-50 p-2 text-xs font-bold text-emerald-800"><Check size={14}/>{dict.heroUnderstood}</div></div>
+          <div className="absolute bottom-[10%] right-[9%] z-20 grid size-20 place-items-center rounded-full border border-white bg-white/75 shadow-xl backdrop-blur landing-float"><ShieldCheck className="text-emerald-700" size={30}/></div>
+          <Image src="/assets/login/kinti-bird.png" alt="Colibrí Kinti" width={320} height={280} priority className="absolute left-1/2 top-1/2 z-10 w-[42%] -translate-x-1/2 -translate-y-1/2 object-contain drop-shadow-[0_28px_24px_rgba(3,69,48,.17)]"/>
+          <Image src="/assets/app/leaves.svg" alt="" width={260} height={180} className="absolute bottom-0 right-0 z-0 w-[38%] opacity-75"/><Image src="/assets/app/leaves.svg" alt="" width={220} height={150} className="absolute left-[18%] top-[4%] z-0 w-[24%] -rotate-[68deg] opacity-35"/>
+        </div>
       </div>
-    </section>
-  );
+    </div>
+    <button type="button" onClick={() => document.getElementById('producto')?.scrollIntoView({ behavior: 'smooth', block: 'start' })} className="absolute bottom-5 left-1/2 z-20 hidden -translate-x-1/2 flex-col items-center gap-2 text-[10px] font-bold uppercase tracking-[.18em] text-emerald-800/60 lg:flex">{dict.scroll}<span className="grid size-8 place-items-center rounded-full border border-emerald-800/20 bg-white/50"><ArrowDown size={14}/></span></button>
+  </section>;
 }
