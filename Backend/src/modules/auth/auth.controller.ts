@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { FirebaseTokenDto } from './dto/firebase-token.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -16,6 +17,11 @@ export class AuthController {
   @Post('login')
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Post('google')
+  googleLogin(@Body() dto: FirebaseTokenDto) {
+    return this.authService.loginWithFirebase(dto.idToken);
   }
 
   @UseGuards(JwtAuthGuard)

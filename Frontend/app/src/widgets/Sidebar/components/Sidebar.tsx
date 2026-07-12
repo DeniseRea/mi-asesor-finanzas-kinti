@@ -2,17 +2,16 @@
 
 import { UserAvatar } from '@entities/user/components/UserAvatar';
 import Link from 'next/link';
+import { useAuth } from '@/shared/lib/auth-context';
 
 interface SidebarProps {
   currentLocale: 'es' | 'en';
 }
 
 export function Sidebar({ currentLocale }: SidebarProps) {
-  const mockUser = {
-    id: '123',
-    name: 'Kevin Kinti',
-    email: 'kevin@kinti.io',
-  };
+  const { user, logout } = useAuth();
+
+  const displayUser = user ?? { id: '', name: 'Usuario', email: '' };
 
   return (
     <aside className="w-64 border-r border-slate-900 bg-slate-950 flex flex-col h-screen sticky top-0 p-6 justify-between">
@@ -42,7 +41,14 @@ export function Sidebar({ currentLocale }: SidebarProps) {
 
       <div className="flex flex-col gap-6">
         {/* User Info */}
-        <UserAvatar user={mockUser} />
+        <UserAvatar user={displayUser} />
+
+        <button
+          onClick={logout}
+          className="px-4 py-2 rounded-lg text-sm font-medium text-red-400 hover:text-red-300 hover:bg-slate-900 transition-colors text-left"
+        >
+          {currentLocale === 'es' ? 'Cerrar sesion' : 'Sign out'}
+        </button>
         
         {/* Language switch toggle */}
         <div className="flex gap-2">

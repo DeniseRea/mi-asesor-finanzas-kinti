@@ -18,6 +18,7 @@ const auth_service_1 = require("./auth.service");
 const register_dto_1 = require("./dto/register.dto");
 const login_dto_1 = require("./dto/login.dto");
 const jwt_auth_guard_1 = require("./guards/jwt-auth.guard");
+const firebase_token_dto_1 = require("./dto/firebase-token.dto");
 let AuthController = class AuthController {
     authService;
     constructor(authService) {
@@ -28,6 +29,9 @@ let AuthController = class AuthController {
     }
     login(dto) {
         return this.authService.login(dto);
+    }
+    googleLogin(dto) {
+        return this.authService.loginWithFirebase(dto.idToken);
     }
     getProfile(req) {
         return this.authService.getProfile(req.user.id);
@@ -51,6 +55,13 @@ __decorate([
     __metadata("design:paramtypes", [login_dto_1.LoginDto]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.Post)('google'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [firebase_token_dto_1.FirebaseTokenDto]),
+    __metadata("design:returntype", void 0)
+], AuthController.prototype, "googleLogin", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.Get)('profile'),

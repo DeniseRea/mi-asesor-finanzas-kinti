@@ -47,12 +47,30 @@ const common_1 = require("@nestjs/common");
 const jwt_1 = require("@nestjs/jwt");
 const prisma_service_1 = require("../../prisma/prisma.service");
 const bcrypt = __importStar(require("bcrypt"));
+const app_1 = require("firebase-admin/app");
+const auth_1 = require("firebase-admin/auth");
 let AuthService = class AuthService {
     prisma;
     jwtService;
+    firebaseApp = null;
     constructor(prisma, jwtService) {
         this.prisma = prisma;
         this.jwtService = jwtService;
+        this.initFirebase();
+    }
+    initFirebase() {
+        const projectId = process.env.FIREBASE_PROJECT_ID;
+        const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+        const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+        if (projectId && clientEmail && privateKey) {
+            this.firebaseApp = (0, app_1.initializeApp)({
+                credential: (0, app_1.cert)({
+                    projectId,
+                    clientEmail,
+                    privateKey: privateKey.replace(/\\n/g, '\n'),
+                }),
+            });
+        }
     }
     async register(dto) {
         const existing = await this.prisma.user.findUnique({ where: { email: dto.email } });
@@ -81,6 +99,35 @@ let AuthService = class AuthService {
         const isPasswordValid = await bcrypt.compare(dto.password, user.password);
         if (!isPasswordValid) {
             throw new common_1.UnauthorizedException('Credenciales inválidas');
+        }
+        const token = this.generateToken(user);
+        return { user: { id: user.id, name: user.name, email: user.email }, token };
+    }
+    async loginWithFirebase(idToken) {
+        if (!this.firebaseApp) {
+            throw new common_1.UnauthorizedException('Firebase no está configurado');
+        }
+        let decoded;
+        try {
+            decoded = await (0, auth_1.getAuth)(this.firebaseApp).verifyIdToken(idToken);
+        }
+        catch {
+            throw new common_1.UnauthorizedException('Token de Firebase inválido');
+        }
+        const email = decoded.email;
+        const name = decoded.name || email?.split('@')[0] || 'Usuario Google';
+        if (!email) {
+            throw new common_1.UnauthorizedException('No se pudo obtener el email de Google');
+        }
+        let user = await this.prisma.user.findUnique({ where: { email } });
+        if (!user) {
+            user = await this.prisma.user.create({
+                data: {
+                    name,
+                    email,
+                    password: null,
+                },
+            });
         }
         const token = this.generateToken(user);
         return { user: { id: user.id, name: user.name, email: user.email }, token };

@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { Locale } from '@/shared/i18n/config';
 import type { RegisterDictionary } from '@/shared/i18n/dictionaries/register';
+import { useAuth } from '@/shared/lib/auth-context';
 import { isStrongPassword, isValidEmail, isValidName, MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MAX_PASSWORD_LENGTH, normalizeEmail } from '../lib/validation';
 
 interface RegisterFormProps {
@@ -51,9 +53,27 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
   const [confirmation, setConfirmation] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { register, loginWithGoogle } = useAuth();
+  const router = useRouter();
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleGoogleLogin = async () => {
+    setError('');
+    setIsSubmitting(true);
+    try {
+      await loginWithGoogle();
+      router.push(`/${locale}/dashboard`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al iniciar sesion con Google');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setError('');
     const form = event.currentTarget;
     const nameInput = form.elements.namedItem('name') as HTMLInputElement;
     const emailInput = form.elements.namedItem('email') as HTMLInputElement;
@@ -64,7 +84,18 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
     emailInput.setCustomValidity(isValidEmail(email) ? '' : dict.validation.email);
     passwordInput.setCustomValidity(isStrongPassword(password) ? '' : dict.validation.password);
     confirmationInput.setCustomValidity(password === confirmation ? '' : dict.validation.confirmation);
-    form.reportValidity();
+
+    if (!form.reportValidity()) return;
+
+    setIsSubmitting(true);
+    try {
+      await register({ name, email, password, confirmPassword: confirmation });
+      router.push(`/${locale}/login`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al crear la cuenta');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -75,6 +106,12 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            {error}
+          </div>
+        )}
+
         <div className="space-y-1.5">
           <label htmlFor="register-name" className="block text-sm font-semibold text-slate-900">{dict.name}</label>
           <div className="relative">
@@ -103,14 +140,16 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
           <span>{dict.accept} <a href="#" className="font-semibold text-[#075b40] hover:underline">{dict.terms}</a> {dict.and} <a href="#" className="font-semibold text-[#075b40] hover:underline">{dict.privacy}</a>.</span>
         </label>
 
-        <button type="submit" className="relative flex min-h-12 w-full items-center justify-center rounded-xl bg-[#075b40] px-5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(7,91,64,0.2)] transition hover:bg-[#064c36] active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075b40]">
-          {dict.submit}
-          <svg aria-hidden="true" className="absolute right-5 h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7 7 7-7 7" /></svg>
+        <button type="submit" disabled={isSubmitting} className="relative flex min-h-12 w-full items-center justify-center rounded-xl bg-[#075b40] px-5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(7,91,64,0.2)] transition hover:bg-[#064c36] active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075b40] disabled:opacity-60 disabled:cursor-not-allowed">
+          {isSubmitting ? '...' : dict.submit}
+          {!isSubmitting && (
+            <svg aria-hidden="true" className="absolute right-5 h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7 7 7-7 7" /></svg>
+          )}
         </button>
       </form>
 
       <div className="my-5 flex items-center gap-4"><span className="h-px flex-1 bg-slate-200" /><span className="text-xs font-medium text-slate-500">{dict.continueWith}</span><span className="h-px flex-1 bg-slate-200" /></div>
-      <button type="button" aria-label={`${dict.continueWithProvider} ${dict.google}`} className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:border-emerald-200 hover:bg-emerald-50/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075b40]">
+      <button type="button" onClick={handleGoogleLogin} disabled={isSubmitting} aria-label={`${dict.continueWithProvider} ${dict.google}`} className="flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:border-emerald-200 hover:bg-emerald-50/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075b40] disabled:opacity-60 disabled:cursor-not-allowed">
         <Image src="/assets/login/google-g.svg" alt="" width={21} height={21} /><span>{dict.google}</span>
       </button>
       <p className="mt-5 text-center text-sm font-medium text-slate-600">{dict.alreadyAccount}{' '}<Link href={`/${locale}/login`} className="font-bold text-[#08704d] hover:underline">{dict.signIn}</Link></p>

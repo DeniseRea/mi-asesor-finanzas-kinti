@@ -5,7 +5,9 @@ import { LoginDto } from './dto/login.dto';
 export declare class AuthService {
     private prisma;
     private jwtService;
+    private firebaseApp;
     constructor(prisma: PrismaService, jwtService: JwtService);
+    private initFirebase;
     register(dto: RegisterDto): Promise<{
         user: {
             id: string;
@@ -15,6 +17,14 @@ export declare class AuthService {
         token: string;
     }>;
     login(dto: LoginDto): Promise<{
+        user: {
+            id: string;
+            name: string;
+            email: string;
+        };
+        token: string;
+    }>;
+    loginWithFirebase(idToken: string): Promise<{
         user: {
             id: string;
             name: string;

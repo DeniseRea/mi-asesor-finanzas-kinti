@@ -1,6 +1,7 @@
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { FirebaseTokenDto } from './dto/firebase-token.dto';
 export declare class AuthController {
     private authService;
     constructor(authService: AuthService);
@@ -13,6 +14,14 @@ export declare class AuthController {
         token: string;
     }>;
     login(dto: LoginDto): Promise<{
+        user: {
+            id: string;
+            name: string;
+            email: string;
+        };
+        token: string;
+    }>;
+    googleLogin(dto: FirebaseTokenDto): Promise<{
         user: {
             id: string;
             name: string;
