@@ -8,3 +8,4 @@ env.*
 *.env.development
 *.env.production
 *.env.test
+Backend/prisma/dev.db
