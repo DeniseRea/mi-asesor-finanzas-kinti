@@ -1,0 +1,1099 @@
+{
+  "name": "telegram + callback",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "procesar-gasto",
+        "options": {}
+      },
+      "id": "50de6ea4-e041-465f-9e42-3eae3fbd2df2",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -336,
+        2512
+      ],
+      "webhookId": "737bd0b1-b60b-47ff-a209-35cdb2d2b859"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "w1",
+              "name": "mensaje",
+              "type": "string",
+              "value": "={{ $json.body.mensaje }}"
+            },
+            {
+              "id": "w2",
+              "name": "usuario_id",
+              "type": "string",
+              "value": "={{ $json.body.usuario_id }}"
+            },
+            {
+              "id": "w3",
+              "name": "origen",
+              "type": "string",
+              "value": "web"
+            },
+            {
+              "id": "w4",
+              "name": "tiene_archivo",
+              "type": "boolean",
+              "value": "={{ ($binary && Object.keys($binary).length > 0) || !!$json.body.archivo_csv }}"
+            },
+            {
+              "id": "w5",
+              "name": "archivo_file_id",
+              "type": "string",
+              "value": ""
+            },
+            {
+              "id": "w6",
+              "name": "timestamp_mensaje",
+              "type": "number",
+              "value": "={{ $json.body.timestamp || Date.now() }}"
+            },
+            {
+              "id": "w7",
+              "name": "tiene_imagen",
+              "type": "boolean",
+              "value": false
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "73532dce-3098-4c4c-954c-0894f2e05011",
+      "name": "Normalizar (Web)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -112,
+        2512
+      ]
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "b01df39f-5ae4-443a-b3c3-b795544d7bee",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -336,
+        2800
+      ],
+      "webhookId": "e5f6a7b8-1234-5678-9abc-def012345678",
+      "credentials": {
+        "telegramApi": {
+          "id": "unIjvOaGyo0GcTrR",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "t1",
+              "name": "mensaje",
+              "type": "string",
+              "value": "={{ $json.message?.text || \"\" }}"
+            },
+            {
+              "id": "t2",
+              "name": "usuario_id",
+              "type": "string",
+              "value": "={{ String($json.message?.chat?.id || \"\") }}"
+            },
+            {
+              "id": "t3",
+              "name": "origen",
+              "type": "string",
+              "value": "telegram"
+            },
+            {
+              "id": "t4",
+              "name": "tiene_archivo",
+              "type": "boolean",
+              "value": "={{ !!$json.message?.document }}"
+            },
+            {
+              "id": "t5",
+              "name": "archivo_file_id",
+              "type": "string",
+              "value": "={{ $json.message?.document?.file_id || \"\" }}"
+            },
+            {
+              "id": "t6",
+              "name": "timestamp_mensaje",
+              "type": "number",
+              "value": "={{ $json.message?.date ? $json.message.date * 1000 : Date.now() }}"
+            },
+            {
+              "id": "t7",
+              "name": "tiene_imagen",
+              "type": "boolean",
+              "value": "={{ !!$json.message?.photo || ($json.message?.document?.mime_type && !$json.message.document.mime_type.includes('csv') && !$json.message.document.mime_type.includes('text')) }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "46f12f13-3c51-4ae9-95e3-63ede68b380d",
+      "name": "Normalizar (Telegram)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -112,
+        2800
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tiene_imagen }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "rightValue": ""
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Imagen No Soportada"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tiene_archivo }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "rightValue": ""
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Archivo (CSV)"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Texto"
+        }
+      },
+      "id": "8c53579f-14c5-441a-a870-162ce58ce88a",
+      "name": "Director de Tráfico",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        112,
+        2656
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "aa11bb22-cc33-dd44-ee55-ff6677889900",
+              "leftValue": "={{ $json.origen }}",
+              "rightValue": "telegram",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c52c83ed-8071-484a-85c3-13d75775f5d7",
+      "name": "¿Es archivo de Telegram?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        336,
+        2512
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.archivo_file_id }}",
+        "additionalFields": {}
+      },
+      "id": "37d55f99-63ee-4224-8f5c-efb8efe7efd3",
+      "name": "Descargar Archivo Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        560,
+        2432
+      ],
+      "webhookId": "3ee26153-d5d8-4958-9f34-fac1ec649556",
+      "credentials": {
+        "telegramApi": {
+          "id": "unIjvOaGyo0GcTrR",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "headerRow": true
+        }
+      },
+      "id": "44698152-bcd4-44d2-a9e7-e0d77f4efab8",
+      "name": "Leer CSV",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        784,
+        2512
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const row = $json;\nconst num = (v) => parseFloat(String(v ?? '').replace(',', '.')) || 0;\nlet monto = num(row.monto ?? row.Monto ?? row.importe ?? row.Importe ?? row.valor ?? row.Valor);\nconst credito = num(row.credito ?? row.Credito ?? row.abono ?? row.Abono);\nconst debito = num(row.debito ?? row.Debito ?? row.cargo ?? row.Cargo);\nif (!monto && (credito || debito)) monto = credito - debito;\nconst esIngreso = monto > 0;\nconst usuario_id = $('Director de Tráfico').first().json.usuario_id;\nconst origen = $('Director de Tráfico').first().json.origen;\nreturn {\n  json: {\n    usuario_id,\n    origen,\n    monto: Math.abs(monto),\n    categoria: 'Transaccion bancaria',\n    entidad: row.descripcion ?? row.Descripcion ?? row.concepto ?? row.Concepto ?? row.entidad ?? 'Desconocido',\n    fecha: row.fecha ?? row.Fecha ?? '',\n    tipo: esIngreso ? 'INGRESO' : 'GASTO'\n  }\n};"
+      },
+      "id": "dea13323-2805-4280-884b-16b973be9817",
+      "name": "Normalizar CSV",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        2512
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "movimientos",
+        "options": {}
+      },
+      "id": "079110ce-8a5c-4967-a425-95f2951179a2",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        2512
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const movimientos = $json.movimientos;\nreturn {\n  json: {\n    usuario_id: movimientos[0].usuario_id,\n    origen: movimientos[0].origen,\n    accion: 'CARGA_MASIVA',\n    movimientos: movimientos.map(m => ({\n      monto: m.monto,\n      categoria: m.categoria,\n      entidad: m.entidad,\n      fecha: m.fecha,\n      tipo: m.tipo\n    })),\n    respuesta_chat: `He procesado correctamente los ${movimientos.length} movimientos de tu extracto bancario.`\n  }\n};"
+      },
+      "id": "bf1fa254-a4c5-419f-a887-affbe287eb54",
+      "name": "Resumen Carga Masiva",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1456,
+        2512
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Zona horaria fija (ajustar según país de tus usuarios; Colombia no tiene horario de verano)\nconst TZ_OFFSET_HOURS = -5; // America/Bogota\n\nconst baseMs = Number($json.timestamp_mensaje) || Date.now();\nconst localMs = baseMs + TZ_OFFSET_HOURS * 3600 * 1000;\nconst base = new Date(localMs);\n\nfunction addDays(date, days) {\n  const d = new Date(date);\n  d.setUTCDate(d.getUTCDate() + days);\n  return d;\n}\nfunction iso(date) {\n  return date.toISOString().slice(0, 10);\n}\n\nconst fechas = {\n  hoy: iso(base),\n  ayer: iso(addDays(base, -1)),\n  antier: iso(addDays(base, -2)),\n  anteayer: iso(addDays(base, -2)),\n  manana: iso(addDays(base, 1)),\n  pasado_manana: iso(addDays(base, 2)),\n  hace_2_dias: iso(addDays(base, -2)),\n  hace_3_dias: iso(addDays(base, -3)),\n  hace_una_semana: iso(addDays(base, -7)),\n  hace_2_semanas: iso(addDays(base, -14))\n};\n\nreturn {\n  json: {\n    ...$json,\n    fechas_referencia: fechas\n  }\n};"
+      },
+      "id": "d90e3416-afe3-4c16-8652-2b23969aedf4",
+      "name": "Fechas de Referencia",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        2912
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $(\"Director de Tráfico\").item.json.mensaje }}",
+        "options": {
+          "systemMessage": "=Eres Kinti, un asistente financiero experto. Tu tarea es analizar el mensaje del usuario, clasificar su intención y extraer los datos ESTRICTAMENTE en formato JSON plano, SIN texto adicional antes o después, SIN explicaciones, SIN markdown. Tu respuesta debe empezar con { y terminar con }.\n\nTABLA DE FECHAS DE REFERENCIA (usa EXACTAMENTE estos valores, NO calcules fechas tú mismo, solo empareja la expresión temporal del mensaje con el valor correspondiente de esta tabla):\n{{ JSON.stringify($json.fechas_referencia) }}\nSi el usuario no menciona ninguna referencia temporal, usa el valor de \"hoy\".\nSi menciona una fecha explícita (ej. \"5 de marzo\", \"el 20/06\"), ignora la tabla y usa esa fecha literal en formato YYYY-MM-DD.\n\nTu respuesta JSON debe tener siempre 3 llaves principales: \"accion\", \"datos\" y \"respuesta_chat\".\n\nPASO OBLIGATORIO ANTES DE RESPONDER: cuenta cuántos movimientos financieros distintos (gastos y/o ingresos) menciona el usuario en el mensaje. NUNCA omitas ninguno. Si cuentas 2 o más, DEBES usar el formato CARGA_MASIVA. Si cuentas 1 solo, usa GASTO/INGRESO (NO uses CARGA_MASIVA para un solo movimiento; recuerda que las inversiones también son GASTO).\n\nREGLAS DE CLASIFICACIÓN Y FORMATO DE \"datos\":\n\n1. TRANSACCIONES - UN SOLO movimiento:\nSi es GASTO (gasto, pago, compra, o meter dinero a fondos/acciones/cripto/ahorro/inversiones) -> \"accion\": \"GASTO\", \"datos\": {\"monto\": decimal, \"categoria\": \"Comida/Educacion/Entretenimiento/Salud/Servicios/Transporte/Otros\", \"entidad\": \"Nombre del lugar, plataforma o activo\", \"fecha\": \"YYYY-MM-DD\"}. No te preocupes por ser perfecto con la categoría, elige la más parecida.\nSi es INGRESO (ingreso, cobro, salario, venta o regalo recibido) -> \"accion\": \"INGRESO\", \"datos\": {\"monto\": decimal, \"categoria\": \"Salario/Venta/Regalo/Otros\", \"entidad\": \"Origen del dinero\", \"fecha\": \"YYYY-MM-DD\"}\nNOTA: No existe una acción \"INVERSION\" separada. Cualquier inversión (fondos, acciones, cripto, ahorro) se clasifica como \"accion\": \"GASTO\", usando la categoría correspondiente (Acciones/Cripto/Bienes Raices/Ahorro).\n\n2. TRANSACCIONES - 2 O MÁS movimientos:\n-> \"accion\": \"CARGA_MASIVA\". \"datos\" es SIEMPRE un ARRAY. CADA elemento DEBE incluir el campo \"tipo\" (\"GASTO\" o \"INGRESO\") ADEMÁS de monto/categoria/entidad/fecha. Nunca omitas \"tipo\" en ningún elemento.\n{\"accion\": \"CARGA_MASIVA\", \"total_registros\": N, \"datos\": [{\"monto\": decimal, \"categoria\": \"...\", \"entidad\": \"...\", \"fecha\": \"YYYY-MM-DD\", \"tipo\": \"GASTO\"|\"INGRESO\"}], \"respuesta_chat\": \"resumen corto\"}\n\n3. PRESUPUESTOS (RF-03):\nSi el usuario quiere establecer un límite o presupuesto -> \"accion\": \"CREAR_PRESUPUESTO\", \"datos\": {\"categoria\": \"string\", \"monto\": decimal, \"mes\": mes_actual_numero, \"anio\": anio_actual, \"umbral\": 80}\nSi el usuario pregunta cuánto ha gastado o cuánto le queda en una categoría -> \"accion\": \"CONSULTAR_PRESUPUESTO\", \"datos\": {\"categoria\": \"string\"}\n\n4. SOPORTE Y TICKETS (RF-05):\nSi el usuario hace una pregunta sobre cómo usar la app o dudas financieras generales -> \"accion\": \"FAQ\", \"datos\": {}. Redacta \"respuesta_chat\" usando la información de la BASE DE CONOCIMIENTOS de abajo, respondiendo el dato DIRECTAMENTE, en tono natural, como si ya lo supieras de memoria. PROHIBIDO decir frases como \"voy a revisar\", \"voy a consultar\", \"permíteme buscar\", \"voy a verificar en mi base de conocimientos\" o cualquier variante — eso nunca debe aparecer en respuesta_chat. Responde ya con el dato, sin anunciar que vas a buscarlo.\nSi el usuario tiene un problema, hace un reclamo de fraude, o pide hablar con un humano -> \"accion\": \"TICKET\", \"datos\": {\"asunto\": \"Resumen corto del problema\", \"prioridad\": \"ALTA\"|\"MEDIA\"|\"BAJA\"}.\n\n5. CONFIRMACIÓN:\nSi la información de un movimiento, presupuesto o consulta es ambigua o falta un dato clave -> \"accion\": \"CONFIRMACION\", \"datos\": {...datos parciales conocidos...}. Recuerda el contexto de la conversación (memoria): si en el turno anterior propusiste una operación y el usuario ahora responde \"Sí\", \"Confirmado\" o \"Correcto\", NO vuelvas a pedir confirmación: emite el JSON final con la acción real (GASTO/INGRESO/CARGA_MASIVA/CREAR_PRESUPUESTO/etc., recordando que NO existe la acción INVERSION) y los datos previos.\nSi la acción es \"CONFIRMACION\", el campo respuesta_chat DEBE ser una pregunta clara al usuario pidiendo el dato que falta.\n\n6. Si es una charla que no encaja en lo anterior -> \"accion\": \"OTRO\", \"datos\": {}.\n\nBASE DE CONOCIMIENTOS KINTI (Para la acción FAQ — SOLO puedes responder con esta información, nunca inventes datos no listados aquí):\n- ¿Cómo borro un gasto?: Ve a la sección 'Historial' en la app web, desliza la transacción y presiona el ícono de papelera.\n- ¿Kinti es gratis?: Sí, la versión básica es 100% gratuita.\n- ¿Cuáles son las categorías de presupuesto?: Comida, Transporte, Compras, Entretenimiento, Salud, Vivienda, Otros.\n- ¿Cómo funcionan las alertas?: Te avisaremos por aquí cuando superes el 80% (umbral por defecto) de tu presupuesto.\n- ¿Cómo cambio mi moneda predeterminada?: Ve a tu Perfil en la app web y selecciona la moneda (USD, EUR, CLP, etc.).\n- ¿Cómo registro un gasto por Telegram?: Solo escríbeme en lenguaje natural, ej. \"gasté 20 en comida\", y yo lo interpreto automáticamente.\n- ¿Puedo subir un CSV de mi banco?: Sí, desde la app web puedes subir tu extracto bancario en CSV y lo proceso automáticamente.\n- ¿Cómo edito un presupuesto ya creado?: Por ahora dime el nuevo monto para esa categoría y lo actualizo, o hazlo desde la sección Presupuestos en la app web.\n\nREGLA DE ESCALAMIENTO OBLIGATORIA (RF-05): la lista de arriba es TODO lo que puedes responder como \"FAQ\". Si el usuario pregunta o menciona algo que NO está en esa lista y que suene a: dinero perdido, cargo no reconocido, fraude, error del sistema, cuenta bloqueada, problema con un pago, o pide explícitamente hablar con una persona/humano/soporte -> SIEMPRE usa \"accion\": \"TICKET\", NUNCA \"FAQ\", incluso si crees saber la respuesta por conocimiento general. Ante la duda entre FAQ y TICKET, prefiere SIEMPRE TICKET — es preferible escalar de más que responder algo no aprobado.\n\nEJEMPLOS RESUELTOS (sigue este patrón EXACTAMENTE):\n\nEjemplo 1 - un solo gasto (objeto plano, SIN \"tipo\"):\nUsuario: \"Me compré un pollo asado en el asadero de la esquina, 20 dólares\"\nRespuesta: {\"accion\": \"GASTO\", \"datos\": {\"monto\": 20.00, \"categoria\": \"Comida\", \"entidad\": \"Asadero de la esquina\", \"fecha\": \"USAR_VALOR_DE_LA_TABLA_HOY\"}, \"respuesta_chat\": \"¡Genial! Registré tu gasto de $20 en pollo asado.\"}\n\nEjemplo 2 - dos movimientos (array, CADA elemento CON \"tipo\"):\nUsuario: \"Ayer gasté 15 dólares en la cafetería y mi hermana me depositó 10 dólares\"\nRespuesta: {\"accion\": \"CARGA_MASIVA\", \"total_registros\": 2, \"datos\": [{\"monto\": 15, \"categoria\": \"Comida\", \"entidad\": \"Cafetería\", \"fecha\": \"USAR_VALOR_DE_LA_TABLA_AYER\", \"tipo\": \"GASTO\"}, {\"monto\": 10, \"categoria\": \"Transferencia\", \"entidad\": \"Hermana\", \"fecha\": \"USAR_VALOR_DE_LA_TABLA_HOY\", \"tipo\": \"INGRESO\"}], \"respuesta_chat\": \"¡Listo! Registré 2 movimientos: un gasto de $15 y un ingreso de $10.\"}\n\nEjemplo 3 - presupuesto:\nUsuario: \"Mi límite de comida es 500\"\nRespuesta: {\"accion\": \"CREAR_PRESUPUESTO\", \"datos\": {\"categoria\": \"Comida\", \"monto\": 500, \"mes\": 7, \"anio\": 2026, \"umbral\": 80}, \"respuesta_chat\": \"Entendido, tu presupuesto de comida es $500/mes. ¿Correcto?\"}\n\nEjemplo 4 - consulta de presupuesto:\nUsuario: \"¿Cuánto me queda en transporte?\"\nRespuesta: {\"accion\": \"CONSULTAR_PRESUPUESTO\", \"datos\": {\"categoria\": \"Transporte\"}, \"respuesta_chat\": \"Dame un segundo, reviso tu presupuesto de transporte.\"}\n\nEjemplo 5 - FAQ:\nUsuario: \"¿Kinti tiene algún costo?\"\nRespuesta: {\"accion\": \"FAQ\", \"datos\": {}, \"respuesta_chat\": \"No te preocupes, la versión básica de Kinti es 100% gratuita.\"}\n\nEjemplo 6 - Ticket:\nUsuario: \"Hay un cargo en mi cuenta que no reconozco, quiero hablar con alguien\"\nRespuesta: {\"accion\": \"TICKET\", \"datos\": {\"asunto\": \"Cargo no reconocido en la cuenta\", \"prioridad\": \"ALTA\"}, \"respuesta_chat\": \"Entiendo tu preocupación, voy a escalar esto a nuestro equipo de soporte de inmediato.\"}\n\nRECUERDA: tu respuesta completa debe ser ÚNICAMENTE el objeto JSON. No agregues \"Aquí está el análisis:\" ni ningún otro texto fuera del JSON. Usa SIEMPRE los valores exactos de la tabla de fechas, nunca inventes ni calcules una fecha distinta a la tabla salvo que el usuario dé una fecha explícita."
+        }
+      },
+      "id": "9e349788-af96-410a-81cc-a8b228dff1c9",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        560,
+        2912
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.1-8b-instant",
+        "options": {}
+      },
+      "id": "7d823a14-d5b4-4fcd-a0e9-1c4606519238",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        576,
+        3136
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "4CoQaFDvn2GmAF2M",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $(\"Director de Tráfico\").item.json.usuario_id }}",
+        "contextWindowLength": 15
+      },
+      "id": "9fed8dd6-e480-4663-a67a-c1053b1cacfe",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        704,
+        3136
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $(\"Director de Tráfico\").item.json.mensaje }}",
+        "options": {
+          "systemMessage": "=Eres Kinti (Respaldo), un asistente financiero experto. Tu tarea es analizar el mensaje del usuario y extraer los datos ESTRICTAMENTE en formato JSON plano, SIN texto adicional antes o después, SIN explicaciones, SIN markdown. Tu respuesta debe empezar con { y terminar con }.\n\nTABLA DE FECHAS DE REFERENCIA (usa EXACTAMENTE estos valores, NO calcules fechas tú mismo):\n{{ JSON.stringify($json.fechas_referencia) }}\nSi el usuario no menciona ninguna referencia temporal, usa el valor de \"hoy\". Si menciona una fecha explícita, ignora la tabla y usa esa fecha literal en formato YYYY-MM-DD.\n\nSigue EXACTAMENTE las mismas reglas establecidas para el agente principal:\n- GASTO/INGRESO (1 movimiento): \"datos\" objeto plano con monto/categoria/entidad/fecha. Para GASTO usa categoria: Comida/Educacion/Entretenimiento/Salud/Servicios/Transporte/Otros. Para INGRESO usa categoria: Salario/Venta/Regalo/Otros (elige la más parecida, no hace falta precisión perfecta). NO existe la acción \"INVERSION\": cualquier inversión se clasifica como \"GASTO\".\n- CARGA_MASIVA (2+ movimientos): \"datos\" array, cada elemento CON \"tipo\" (\"GASTO\"|\"INGRESO\") obligatorio.\n- CREAR_PRESUPUESTO: \"datos\": {categoria, monto, mes, anio, umbral}.\n- CONSULTAR_PRESUPUESTO: \"datos\": {categoria}.\n- FAQ: \"datos\": {}, responde el dato DIRECTAMENTE en \"respuesta_chat\", en tono natural. PROHIBIDO decir \"voy a revisar\", \"voy a consultar\" o similar.\n- TICKET: \"datos\": {asunto, prioridad}.\n- CONFIRMACION: si falta un dato clave o es ambiguo, pide confirmación en \"respuesta_chat\".\n- OTRO: \"datos\": {}.\n\nEl output debe tener siempre \"accion\", \"datos\" y \"respuesta_chat\"."
+        }
+      },
+      "id": "e163cc11-00cd-4b05-a367-1766b494a7e9",
+      "name": "AI Agent1",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        912,
+        3024
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "4cbd6461-4527-48ff-b13e-a0d2be109548",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        928,
+        3248
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "her9zQpMCGLFH6fi",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $(\"Director de Tráfico\").item.json.usuario_id }}",
+        "contextWindowLength": 15
+      },
+      "id": "c8cbff6c-47fd-45a7-8fac-abf8ebbaf43b",
+      "name": "Simple Memory1",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        1056,
+        3248
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// 1. Obtenemos la salida en texto generada por el Agente de IA\nlet raw = $json.output ?? '';\nif (typeof raw !== 'string') raw = JSON.stringify(raw);\n\n// 2. Extraemos el primer bloque {...} del texto, sin importar\n//    si el modelo agregó explicaciones, backticks o texto extra alrededor\nconst match = raw.match(/\\{[\\s\\S]*\\}/);\nif (match) raw = match[0];\nraw = raw.trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch (e) {\n  parsed = { accion: 'OTRO', datos: {}, respuesta_chat: 'No pude entender tu mensaje, ¿puedes reformularlo?' };\n}\n\n// 3. Recuperamos las variables de contexto\nconst usuario_id = $('Director de Tráfico').item.json.usuario_id;\nconst origen = $('Director de Tráfico').item.json.origen;\nconst accion = parsed.accion || 'OTRO';\n\nconst ACCIONES_TRANSACCIONALES = ['GASTO', 'INGRESO', 'CARGA_MASIVA'];\n\n// 4a. Si es una transacción (individual o carga masiva), mantenemos el contrato\n//     ya validado con el backend: usuario_id, origen, accion, movimientos[], respuesta_chat\nif (ACCIONES_TRANSACCIONALES.includes(accion)) {\n  let movimientosArray = [];\n  if (accion === 'CARGA_MASIVA') {\n    movimientosArray = Array.isArray(parsed.datos) ? parsed.datos : [];\n  } else if (parsed.datos && typeof parsed.datos === 'object' && Object.keys(parsed.datos).length > 0) {\n    movimientosArray = [parsed.datos];\n  }\n\n  // Backfill defensivo: si el modelo omitió \"tipo\" en algún movimiento, lo inferimos\n  // usando la acción original como pista (GASTO por defecto si no se puede determinar)\n  const tipoPorAccion = { GASTO: 'GASTO', INGRESO: 'INGRESO' };\n  movimientosArray = movimientosArray.map(m => ({\n    ...m,\n    tipo: m.tipo || tipoPorAccion[accion] || 'GASTO'\n  }));\n\n  return {\n    json: {\n      usuario_id,\n      origen,\n      accion,\n      movimientos: movimientosArray,\n      respuesta_chat: parsed.respuesta_chat || 'Operación procesada correctamente.'\n    }\n  };\n}\n\n// 4b. Para el resto de acciones (CREAR_PRESUPUESTO, CONSULTAR_PRESUPUESTO, FAQ, TICKET,\n//     CONFIRMACION, OTRO) no aplica la forma \"movimientos\" — usamos \"datos\" tal cual,\n//     ya que cada una tiene su propia forma según RF-03/RF-05.\nreturn {\n  json: {\n    usuario_id,\n    origen,\n    accion,\n    datos: parsed.datos || {},\n    respuesta_chat: parsed.respuesta_chat || 'Operación procesada correctamente.'\n  }\n};"
+      },
+      "id": "508ab59c-6a07-4d7b-85d5-4ddc10574ce7",
+      "name": "Registrar Gasto",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        2912
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a5d7cc98-7f83-49de-a714-69b7d47ea135",
+              "leftValue": "={{ $json.origen }}",
+              "rightValue": "telegram",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "10ed6db3-125a-4865-b551-ba1ce01d3d9c",
+      "name": "¿Es canal Telegram?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1760,
+        2960
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3001/api/kinti-webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-kinti-secret",
+              "value": "kinti-secret-12345"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "id": "c91de566-7d74-4bd9-8c62-e51cb3047ff5",
+      "name": "Callback Backend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1728,
+        2592
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.usuario_id }}",
+        "text": "={{ $json.respuesta_chat }}",
+        "additionalFields": {}
+      },
+      "id": "19f68dd3-0aef-4b1c-9f83-b512f601bc4c",
+      "name": "Responder Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2016,
+        2944
+      ],
+      "webhookId": "48c77d0a-047b-4c8f-87ae-0fe0edae9630",
+      "credentials": {
+        "telegramApi": {
+          "id": "unIjvOaGyo0GcTrR",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.accion }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    },
+                    "rightValue": "^(GASTO|INGRESO|CARGA_MASIVA)$"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Transacciones"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.accion }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    },
+                    "rightValue": "^(CREAR_PRESUPUESTO|CONSULTAR_PRESUPUESTO)$"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Presupuestos"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.accion }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    },
+                    "rightValue": "^(TICKET|FAQ)$"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Soporte"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Sin Backend"
+        }
+      },
+      "id": "48f7db8e-b83c-4933-b0ad-a23dfb868433",
+      "name": "Enrutador de Backend",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1440,
+        2880
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3001/api/budgets/webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-kinti-secret",
+              "value": "kinti-secret-12345"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "id": "02734621-8a53-45c3-837e-9f75fa865aa0",
+      "name": "Callback Backend (Presupuestos)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        2768
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3001/api/tickets/webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-kinti-secret",
+              "value": "kinti-secret-12345"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "id": "fa7af7b4-97ef-40e4-ae9a-44bc925e5dcb",
+      "name": "Callback Backend (Soporte)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1744,
+        3136
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  json: {\n    usuario_id: $json.usuario_id,\n    origen: $json.origen,\n    accion: 'OTRO',\n    datos: {},\n    respuesta_chat: 'Por ahora no puedo leer imágenes 📷. Si quieres que registre movimientos desde tu banco, envíame el extracto como archivo .csv 📄, o cuéntame el gasto/ingreso en un mensaje de texto.'\n  }\n};"
+      },
+      "id": "c82d9954-7571-4d5a-8461-69dc765242d8",
+      "name": "Respuesta Imagen No Soportada",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        2208
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Clasificador determinístico de categorías por palabras clave.\n// No usa IA: es rápido, gratis, y garantiza que SIEMPRE caiga en una de las categorías fijas.\n\nconst KEYWORDS_GASTO = {\n  'Comida': ['comida', 'restaurante', 'almuerzo', 'cena', 'desayuno', 'cafe', 'café', 'cafeteria', 'cafetería', 'supermercado', 'mercado', 'snack', 'bebida', 'pizza', 'pollo', 'hamburguesa', 'panaderia', 'panadería'],\n  'Educacion': ['educacion', 'educación', 'universidad', 'colegio', 'curso', 'libro', 'matricula', 'matrícula', 'colegiatura', 'capacitacion', 'capacitación', 'escuela', 'clases'],\n  'Entretenimiento': ['entretenimiento', 'cine', 'streaming', 'netflix', 'juego', 'concierto', 'fiesta', 'bar', 'diversion', 'diversión', 'spotify', 'disney', 'videojuego'],\n  'Salud': ['salud', 'farmacia', 'medico', 'médico', 'doctor', 'hospital', 'medicina', 'consulta', 'clinica', 'clínica', 'seguro medico', 'seguro médico', 'dentista'],\n  'Servicios': ['servicio', 'luz', 'agua', 'internet', 'telefono', 'teléfono', 'electricidad', 'gas', 'arriendo', 'alquiler', 'renta', 'suscripcion', 'suscripción'],\n  'Transporte': ['transporte', 'bus', 'taxi', 'uber', 'gasolina', 'combustible', 'parqueo', 'peaje', 'metro', 'pasaje', 'bencina']\n};\n\nconst CATEGORIAS_GASTO_VALIDAS = ['Comida', 'Educacion', 'Entretenimiento', 'Salud', 'Servicios', 'Transporte', 'Otros'];\nconst CATEGORIAS_INGRESO_VALIDAS = ['Salario', 'Venta', 'Regalo', 'Otros'];\n\nfunction clasificarGasto(categoriaOriginal, entidad) {\n  // Si el modelo ya devolvió exactamente una categoría válida, respétala\n  const directo = CATEGORIAS_GASTO_VALIDAS.find(c => c.toLowerCase() === String(categoriaOriginal || '').toLowerCase());\n  if (directo) return directo;\n\n  const texto = `${categoriaOriginal || ''} ${entidad || ''}`.toLowerCase();\n  for (const [categoria, palabras] of Object.entries(KEYWORDS_GASTO)) {\n    if (palabras.some(p => texto.includes(p))) return categoria;\n  }\n  return 'Otros';\n}\n\nfunction clasificarIngreso(categoriaOriginal, entidad) {\n  const directo = CATEGORIAS_INGRESO_VALIDAS.find(c => c.toLowerCase() === String(categoriaOriginal || '').toLowerCase());\n  if (directo) return directo;\n\n  const texto = `${categoriaOriginal || ''} ${entidad || ''}`.toLowerCase();\n  if (texto.includes('salario') || texto.includes('sueldo') || texto.includes('nomina') || texto.includes('nómina') || texto.includes('quincena')) return 'Salario';\n  if (texto.includes('venta') || texto.includes('vendi') || texto.includes('vendí')) return 'Venta';\n  if (texto.includes('regalo') || texto.includes('obsequio') || texto.includes('me regalaron') || texto.includes('cumpleaños') || texto.includes('herencia')) return 'Regalo';\n  return 'Otros';\n}\n\n// Solo aplica si este item tiene \"movimientos\" (transacciones); el resto de acciones\n// (CREAR_PRESUPUESTO, CONSULTAR_PRESUPUESTO, FAQ, TICKET, CONFIRMACION, OTRO) pasan sin tocar.\nif (Array.isArray($json.movimientos)) {\n  const movimientos = $json.movimientos.map(m => ({\n    ...m,\n    categoria: m.tipo === 'INGRESO' ? clasificarIngreso(m.categoria, m.entidad) : clasificarGasto(m.categoria, m.entidad)\n  }));\n  return { json: { ...$json, movimientos } };\n}\n\nreturn { json: $json };"
+      },
+      "id": "2889695b-9997-4480-8186-06ab5867995f",
+      "name": "Normalizar Categorías",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        3152
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalizar (Web)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar (Web)": {
+      "main": [
+        [
+          {
+            "node": "Director de Tráfico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalizar (Telegram)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar (Telegram)": {
+      "main": [
+        [
+          {
+            "node": "Director de Tráfico",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Director de Tráfico": {
+      "main": [
+        [
+          {
+            "node": "Respuesta Imagen No Soportada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "¿Es archivo de Telegram?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fechas de Referencia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es archivo de Telegram?": {
+      "main": [
+        [
+          {
+            "node": "Descargar Archivo Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leer CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargar Archivo Telegram": {
+      "main": [
+        [
+          {
+            "node": "Leer CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer CSV": {
+      "main": [
+        [
+          {
+            "node": "Normalizar CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar CSV": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Resumen Carga Masiva",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resumen Carga Masiva": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Categorías",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fechas de Referencia": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Registrar Gasto",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Registrar Gasto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Registrar Gasto": {
+      "main": [
+        [
+          {
+            "node": "Normalizar Categorías",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Es canal Telegram?": {
+      "main": [
+        [
+          {
+            "node": "Responder Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrutador de Backend": {
+      "main": [
+        [
+          {
+            "node": "Callback Backend",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "¿Es canal Telegram?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Callback Backend (Presupuestos)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "¿Es canal Telegram?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Callback Backend (Soporte)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "¿Es canal Telegram?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "¿Es canal Telegram?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respuesta Imagen No Soportada": {
+      "main": [
+        [
+          {
+            "node": "¿Es canal Telegram?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Categorías": {
+      "main": [
+        [
+          {
+            "node": "Enrutador de Backend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "750aa94c-7c77-4549-b0b8-ca7b410cdd01",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fdf2931ef18d8880792fa5fbf398b5071029503b3890b318364e25bf5aea4389"
+  },
+  "nodeGroups": [],
+  "id": "5BLsDFCnyatObTe8",
+  "tags": []
+}

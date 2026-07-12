@@ -13,7 +13,7 @@ async function pruebaFlujoCompleto() {
       },
       body: JSON.stringify({
         usuario_id: "12345689",
-        mensaje: "Ayer me gasté 20 dólares en pollo asado en el asadero de la esquina"
+        mensaje: "Hoy tuve un día movido: gasté 20 dólares en comida rápida, luego pagué 150 de la matrícula de educación. En la tarde gasté 30 en entradas para el cine y 45 en la farmacia por temas de salud. Pagué 60 del recibo de luz y 15 en taxis de transporte. Finalmente, me depositaron 1200 dólares de mi salario, vendí mi tele en 400 dolares ."
       })
     });
 
