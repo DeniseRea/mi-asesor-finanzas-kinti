@@ -53,8 +53,10 @@ services:
       NEXT_PUBLIC_FIREBASE_APP_ID: "1:217942834855:web:635f4727ce108975f76582"
     volumes:
       - ./Frontend/app:/app
-      - /app/node_modules
-      - /app/.next
+      - frontend_node_modules:/app/node_modules
+      - frontend_next:/app/.next
 
 volumes:
   pgdata:
+  frontend_node_modules:
+  frontend_next:

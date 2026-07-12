@@ -9,3 +9,6 @@ env.*
 *.env.production
 *.env.test
 Backend/prisma/dev.db
+
+# Docker Desktop WSL2 artifacts
+C??Dev?*
