@@ -34,6 +34,16 @@ export interface RegisterDictionary {
     password: string;
     confirmation: string;
   };
+  verification: {
+    title: string;
+    subtitle: string;
+    code: string;
+    codePlaceholder: string;
+    verify: string;
+    resend: string;
+    changeEmail: string;
+    invalidCode: string;
+  };
   hero: {
     lineOne: string;
     lineTwoPrefix: string;
@@ -77,6 +87,16 @@ const registerDictionaries: Record<Locale, RegisterDictionary> = {
       password: 'Usa entre 8 y 64 caracteres con mayúscula, minúscula, número y símbolo.',
       confirmation: 'Las contraseñas deben coincidir.',
     },
+    verification: {
+      title: 'Verifica tu cuenta',
+      subtitle: 'Ingresa el código de 6 dígitos enviado a',
+      code: 'Código de verificación',
+      codePlaceholder: '000000',
+      verify: 'Verificar cuenta',
+      resend: 'Solicitar otro código',
+      changeEmail: 'Corregir correo',
+      invalidCode: 'El código debe contener exactamente 6 números.',
+    },
     hero: {
       lineOne: 'Empieza hoy,',
       lineTwoPrefix: 'construye',
@@ -117,6 +137,16 @@ const registerDictionaries: Record<Locale, RegisterDictionary> = {
       email: 'Enter a valid email address.',
       password: 'Use 8–64 characters with uppercase, lowercase, a number, and a symbol.',
       confirmation: 'Passwords must match.',
+    },
+    verification: {
+      title: 'Verify your account',
+      subtitle: 'Enter the 6-digit code sent to',
+      code: 'Verification code',
+      codePlaceholder: '000000',
+      verify: 'Verify account',
+      resend: 'Request another code',
+      changeEmail: 'Change email',
+      invalidCode: 'The code must contain exactly 6 numbers.',
     },
     hero: {
       lineOne: 'Start today,',

@@ -8,6 +8,7 @@ import type { Locale } from '@/shared/i18n/config';
 import type { RegisterDictionary } from '@/shared/i18n/dictionaries/register';
 import { useAuth } from '@/shared/lib/auth-context';
 import { isStrongPassword, isValidEmail, isValidName, MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MAX_PASSWORD_LENGTH, normalizeEmail } from '../lib/validation';
+import { VerificationCodeForm } from './VerificationCodeForm';
 
 interface RegisterFormProps {
   dict: RegisterDictionary;
@@ -47,6 +48,7 @@ function PasswordInput({ id, label, placeholder, visible, onToggle, showLabel, h
 }
 
 export function RegisterForm({ dict, locale }: RegisterFormProps) {
+  const [step, setStep] = useState<'details' | 'verification'>('details');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -55,7 +57,7 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { register, loginWithGoogle } = useAuth();
+  const { loginWithGoogle } = useAuth();
   const router = useRouter();
 
   const handleGoogleLogin = async () => {
@@ -71,7 +73,7 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
     }
   };
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
     const form = event.currentTarget;
@@ -87,16 +89,25 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
 
     if (!form.reportValidity()) return;
 
-    setIsSubmitting(true);
-    try {
-      await register({ name, email, password, confirmPassword: confirmation });
-      router.push(`/${locale}/login`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al crear la cuenta');
-    } finally {
-      setIsSubmitting(false);
-    }
+    setStep('verification');
   };
+
+  if (step === 'verification') {
+    return (
+      <VerificationCodeForm
+        title={dict.verification.title}
+        description={<>{dict.verification.subtitle} <strong className="font-semibold text-slate-700">{normalizeEmail(email)}</strong>.</>}
+        codeLabel={dict.verification.code}
+        codePlaceholder={dict.verification.codePlaceholder}
+        verifyLabel={dict.verification.verify}
+        resendLabel={dict.verification.resend}
+        changeEmailLabel={dict.verification.changeEmail}
+        invalidCodeMessage={dict.verification.invalidCode}
+        onVerify={() => router.push(`/${locale}/login`)}
+        onChangeEmail={() => setStep('details')}
+      />
+    );
+  }
 
   return (
     <div className="w-full">
