@@ -2,8 +2,10 @@ import { IsString, IsNumber, IsOptional, IsIn, IsDateString, Min } from 'class-v
 
 export class CreateTransactionDto {
   @IsString()
-  usuario_id: string;
+  @IsOptional()
+  usuario_id?: string;
 
+  @IsString()
   @IsIn(['INGRESO', 'GASTO'])
   accion: 'INGRESO' | 'GASTO';
 

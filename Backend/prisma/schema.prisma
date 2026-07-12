@@ -18,9 +18,6 @@ model User {
   updatedAt DateTime @updatedAt
 
   transactions Transaction[]
-  budgets      Budget[]
-  alerts       Alert[]
-  tickets      Ticket[]
 }
 
 model Transaction {
@@ -36,63 +33,4 @@ model Transaction {
   createdAt   DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
-}
-
-model Budget {
-  id        String   @id @default(uuid())
-  userId    String
-  category  String
-  amount    Float
-  month     Int
-  year      Int
-  threshold Float    @default(80)
-  createdAt DateTime @default(now())
-
-  user   User    @relation(fields: [userId], references: [id])
-  alerts Alert[]
-}
-
-model Alert {
-  id        String   @id @default(uuid())
-  userId    String
-  budgetId  String
-  type      String
-  message   String
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  user   User   @relation(fields: [userId], references: [id])
-  budget Budget @relation(fields: [budgetId], references: [id])
-}
-
-model Ticket {
-  id        String   @id @default(uuid())
-  userId    String
-  subject   String
-  status    String   @default("abierto")
-  priority  String   @default("media")
-  context   String?
-  createdAt DateTime @default(now())
-
-  user     User            @relation(fields: [userId], references: [id])
-  messages TicketMessage[]
-}
-
-model TicketMessage {
-  id        String   @id @default(uuid())
-  ticketId  String
-  role      String
-  content   String
-  createdAt DateTime @default(now())
-
-  ticket Ticket @relation(fields: [ticketId], references: [id])
-}
-
-model KnowledgeBase {
-  id        String   @id @default(uuid())
-  title     String
-  content   String
-  category  String
-  active    Boolean  @default(true)
-  updatedAt DateTime @updatedAt
 }

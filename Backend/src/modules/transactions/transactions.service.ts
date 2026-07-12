@@ -8,14 +8,19 @@ export class TransactionsService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateTransactionDto) {
-    const user = await this.prisma.user.findUnique({ where: { id: dto.usuario_id } });
+    const userId = dto.usuario_id;
+    if (!userId) {
+      throw new BadRequestException('usuario_id es requerido');
+    }
+
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
       throw new NotFoundException('Usuario no encontrado');
     }
 
     const transaction = await this.prisma.transaction.create({
       data: {
-        userId: dto.usuario_id,
+        userId,
         amount: dto.monto,
         type: dto.accion,
         category: dto.categoria,
