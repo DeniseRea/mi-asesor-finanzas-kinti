@@ -84,7 +84,7 @@ describe('Kinti API (e2e)', () => {
   describe('Transactions Module', () => {
     it('/api/transactions (POST)', async () => {
       mockPrismaService.user.findUnique.mockResolvedValue({ id: 'user-1' } as any);
-      mockPrismaService.transaction.create.mockResolvedValue({ id: 'tx-1' } as any);
+      mockPrismaService.transaction.create.mockResolvedValue({ id: 'tx-1', date: new Date(), createdAt: new Date() } as any);
 
       return request(app.getHttpServer())
         .post('/api/transactions')
