@@ -160,10 +160,15 @@ export class AuthService {
   async verifyEmail(email: string, code: string, verificationToken: string) {
     const pending = this.decodeRegistrationToken(verificationToken);
     const normalizedEmail = email.trim().toLowerCase();
-    if (pending.email !== normalizedEmail || pending.codeHash !== this.hashSecret(code)) {
+    if (
+      pending.email !== normalizedEmail ||
+      pending.codeHash !== this.hashSecret(code)
+    ) {
       throw new BadRequestException('Código de verificación inválido');
     }
-    const existing = await this.prisma.user.findUnique({ where: { email: normalizedEmail } });
+    const existing = await this.prisma.user.findUnique({
+      where: { email: normalizedEmail },
+    });
     if (existing) throw new ConflictException('El email ya está registrado');
     await this.prisma.user.create({
       data: {
@@ -179,9 +184,12 @@ export class AuthService {
   async resendVerificationCode(email: string, verificationToken: string) {
     const pending = this.decodeRegistrationToken(verificationToken);
     const normalizedEmail = email.trim().toLowerCase();
-    if (pending.email !== normalizedEmail) throw new BadRequestException('Solicitud de verificación inválida');
+    if (pending.email !== normalizedEmail)
+      throw new BadRequestException('Solicitud de verificación inválida');
     if (pending.iat && Date.now() / 1000 - pending.iat < 60) {
-      throw new BadRequestException('Espera 60 segundos antes de solicitar un nuevo código');
+      throw new BadRequestException(
+        'Espera 60 segundos antes de solicitar un nuevo código',
+      );
     }
     const code = this.generateVerificationCode();
     const nextToken = this.createRegistrationToken({
@@ -192,7 +200,10 @@ export class AuthService {
       codeHash: this.hashSecret(code),
     });
     await this.emailService.sendVerificationCode(pending.email, code);
-    return { message: 'Código de verificación reenviado', verificationToken: nextToken };
+    return {
+      message: 'Código de verificación reenviado',
+      verificationToken: nextToken,
+    };
   }
 
   async logout(userId: string, jti: string, tokenExp: number) {
@@ -229,28 +240,45 @@ export class AuthService {
     const normalized = email.trim().toLowerCase();
     const user = await this.prisma.user.findUnique({
       where: { email: normalized },
+    });
+    if (user?.password) {
+      const latest = await this.prisma.passwordReset.findFirst({
+        where: { userId: user.id },
+        orderBy: { createdAt: 'desc' },
       });
-      if (user?.password) {
-        const latest = await this.prisma.passwordReset.findFirst({
-          where: { userId: user.id },
-          orderBy: { createdAt: 'desc' },
-        });
-        if (latest && latest.createdAt.getTime() > Date.now() - 60_000) {
-          return { message: 'Si la cuenta existe, enviaremos un código de recuperación.' };
-        }
-        const code = this.generateVerificationCode();
-      await this.prisma.passwordReset.updateMany({
-        where: { userId: user.id, usedAt: null },
-        data: { usedAt: new Date() },
-      });
-      await this.prisma.passwordReset.create({
+      if (latest && latest.createdAt.getTime() > Date.now() - 60_000) {
+        return {
+          message: 'Si la cuenta existe, enviaremos un código de recuperación.',
+        };
+      }
+
+      const code = this.generateVerificationCode();
+      const reset = await this.prisma.passwordReset.create({
         data: {
           userId: user.id,
           codeHash: this.hashSecret(code),
           expiresAt: new Date(Date.now() + 15 * 60 * 1000),
         },
       });
-      await this.emailService.sendPasswordResetCode(user.email, code);
+
+      try {
+        await this.emailService.sendPasswordResetCode(user.email, code);
+      } catch (error) {
+        try {
+          await this.prisma.passwordReset.delete({ where: { id: reset.id } });
+        } catch (cleanupError) {
+          this.logger.error(
+            `No se pudo limpiar la solicitud de recuperación ${reset.id}`,
+            cleanupError,
+          );
+        }
+        throw error;
+      }
+
+      await this.prisma.passwordReset.updateMany({
+        where: { userId: user.id, id: { not: reset.id }, usedAt: null },
+        data: { usedAt: new Date() },
+      });
     }
     return {
       message: 'Si la cuenta existe, enviaremos un código de recuperación.',
@@ -349,10 +377,13 @@ export class AuthService {
   private decodeRegistrationToken(token: string): PendingRegistration {
     try {
       const payload = this.jwtService.verify<PendingRegistration>(token);
-      if (payload.purpose !== 'email-verification') throw new Error('invalid purpose');
+      if (payload.purpose !== 'email-verification')
+        throw new Error('invalid purpose');
       return payload;
     } catch {
-      throw new BadRequestException('La verificación expiró. Inicia el registro nuevamente.');
+      throw new BadRequestException(
+        'La verificación expiró. Inicia el registro nuevamente.',
+      );
     }
   }
 

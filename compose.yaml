@@ -19,13 +19,16 @@ services:
     build:
       context: ./Backend
       dockerfile: Dockerfile.dev
+    depends_on:
+      postgres:
+        condition: service_healthy
     ports:
       - "3001:3001"
     env_file:
       - path: ./.env
         required: true
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-kinti}:${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD en tu entorno}@postgres:5432/${POSTGRES_DB:-kinti_dev}
       PORT: "3001"
     volumes:
       - ./Backend:/app

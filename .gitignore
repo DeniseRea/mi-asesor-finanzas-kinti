@@ -11,5 +11,8 @@ env.*
 *.env.test
 Backend/prisma/dev.db
 
+# Documentación técnica generada localmente (LaTeX, PDF y renders)
+/documentacion-tecnica/
+
 # Docker Desktop WSL2 artifacts
 C??Dev?*
