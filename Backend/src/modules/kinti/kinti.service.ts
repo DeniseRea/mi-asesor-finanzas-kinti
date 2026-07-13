@@ -23,7 +23,7 @@ export class KintiService {
     private readonly alertsService: AlertsService,
     private readonly budgetsService: BudgetsService,
     private readonly supportService: SupportService,
-  ) {}
+  ) { }
 
   /**
    * Envía un mensaje (y opcionalmente un archivo) a n8n de forma asíncrona.
@@ -120,21 +120,70 @@ export class KintiService {
     );
 
     try {
-        const request = dto.request_id
-          ? await this.prisma.aiRequest.findUnique({ where: { id: dto.request_id } })
-          : await this.prisma.aiRequest.findFirst({ where: { userId: dto.usuario_id, status: 'processing' }, orderBy: { createdAt: 'desc' } });
-      if (!request || request.userId !== dto.usuario_id)
-        throw new NotFoundException('Solicitud de IA no encontrada');
-        if (request.status === 'completed') return;
-        const processed = await this.prisma.$transaction(async (tx) => {
-          const claim = await tx.aiRequest.updateMany({
-            where: { id: request.id, userId: dto.usuario_id, status: 'processing' },
-            data: { status: 'completing' },
+      // Interceptar comando de vinculación de Telegram (/start USER_UUID)
+      if (dto.origen === 'telegram' && dto.mensaje?.startsWith('/start')) {
+        const targetUserId = dto.mensaje.replace('/start', '').trim();
+        const userExists = await this.prisma.user.findUnique({ where: { id: targetUserId } });
+        if (userExists) {
+          await this.prisma.user.update({
+            where: { id: targetUserId },
+            data: { phone: dto.usuario_id } // guardamos el chat ID de Telegram (dto.usuario_id) en el campo phone
           });
-          if (claim.count === 0) return false;
+          this.logger.log(`Vinculado usuario de Telegram ${dto.usuario_id} con cuenta Web ${targetUserId}`);
+
+          // Creamos una solicitud completada para registrar la vinculación
+          await this.prisma.aiRequest.create({
+            data: {
+              userId: targetUserId,
+              message: 'Vincular Telegram',
+              status: 'completed',
+              responseText: dto.respuesta_chat || '¡Tu cuenta de Telegram ha sido vinculada con éxito!',
+              completedAt: new Date(),
+            }
+          });
+          return;
+        }
+      }
+
+      const user = await this.prisma.user.findFirst({
+        where: {
+          OR: [
+            { id: dto.usuario_id },
+            { phone: dto.usuario_id }
+          ]
+        }
+      });
+      if (!user) throw new NotFoundException('Usuario no encontrado');
+
+      let request = dto.request_id
+        ? await this.prisma.aiRequest.findUnique({ where: { id: dto.request_id } })
+        : await this.prisma.aiRequest.findFirst({
+          where: { userId: user.id, status: 'processing' },
+          orderBy: { createdAt: 'desc' }
+        });
+
+      if (!request && dto.origen === 'telegram') {
+        request = await this.prisma.aiRequest.create({
+          data: {
+            userId: user.id,
+            message: 'Mensaje vía Telegram',
+            status: 'processing',
+          }
+        });
+      }
+
+      if (!request || request.userId !== user.id)
+        throw new NotFoundException('Solicitud de IA no encontrada');
+      if (request.status === 'completed') return;
+      const processed = await this.prisma.$transaction(async (tx) => {
+        const claim = await tx.aiRequest.updateMany({
+          where: { id: request.id, userId: user.id, status: 'processing' },
+          data: { status: 'completing' },
+        });
+        if (claim.count === 0) return false;
         if (dto.movimientos && dto.movimientos.length > 0) {
           const insertData = dto.movimientos.map((mov) => ({
-            userId: dto.usuario_id,
+            userId: user.id,
             amount: mov.monto,
             type: mov.tipo,
             category: mov.categoria,
@@ -147,17 +196,17 @@ export class KintiService {
 
           await tx.transaction.createMany({ data: insertData });
         }
-          await tx.aiRequest.update({
+        await tx.aiRequest.update({
           where: { id: request.id },
           data: {
             status: 'completed',
             responseText: dto.respuesta_chat,
             completedAt: new Date(),
           },
-          });
-          return true;
         });
-        if (!processed) return;
+        return true;
+      });
+      if (!processed) return;
       this.logger.log(
         `Se insertaron ${dto.movimientos.length} movimientos en la base de datos.`,
       );
@@ -165,7 +214,7 @@ export class KintiService {
         (item) => item.tipo === 'GASTO',
       ))
         await this.alertsService.onTransactionCreated({
-          userId: dto.usuario_id,
+          userId: user.id,
           category: movement.categoria,
           amount: movement.monto,
           date: new Date(movement.fecha),
@@ -213,16 +262,39 @@ export class KintiService {
   async procesarCallbackPresupuesto(dto: any): Promise<void> {
     this.logger.log(`Recibido callback PRESUPUESTO de n8n para usuario ${dto.usuario_id}`);
     try {
-      const request = dto.request_id 
+      const user = await this.prisma.user.findFirst({
+        where: {
+          OR: [
+            { id: dto.usuario_id },
+            { phone: dto.usuario_id }
+          ]
+        }
+      });
+      if (!user) throw new NotFoundException('Usuario no encontrado');
+
+      let request = dto.request_id
         ? await this.prisma.aiRequest.findUnique({ where: { id: dto.request_id } })
-        : await this.prisma.aiRequest.findFirst({ where: { userId: dto.usuario_id, status: 'processing' }, orderBy: { createdAt: 'desc' } });
-      
-      if (!request || request.userId !== dto.usuario_id) throw new NotFoundException('Solicitud de IA no encontrada');
+        : await this.prisma.aiRequest.findFirst({
+          where: { userId: user.id, status: 'processing' },
+          orderBy: { createdAt: 'desc' }
+        });
+
+      if (!request && dto.origen === 'telegram') {
+        request = await this.prisma.aiRequest.create({
+          data: {
+            userId: user.id,
+            message: 'Presupuesto vía Telegram',
+            status: 'processing',
+          }
+        });
+      }
+
+      if (!request || request.userId !== user.id) throw new NotFoundException('Solicitud de IA no encontrada');
       if (request.status === 'completed') return;
 
       const processed = await this.prisma.$transaction(async (tx) => {
         const claim = await tx.aiRequest.updateMany({
-          where: { id: request.id, userId: dto.usuario_id, status: 'processing' },
+          where: { id: request.id, userId: user.id, status: 'processing' },
           data: { status: 'completing' },
         });
         if (claim.count === 0) return false;
@@ -231,7 +303,7 @@ export class KintiService {
         if (dto.accion === 'CREAR_PRESUPUESTO' && dto.datos) {
           // Check if it already exists for this category/month/year to update or create
           const existing = await tx.budget.findFirst({
-            where: { userId: dto.usuario_id, category: dto.datos.categoria, month: dto.datos.mes, year: dto.datos.anio }
+            where: { userId: user.id, category: dto.datos.categoria, month: dto.datos.mes, year: dto.datos.anio }
           });
           if (existing) {
             await tx.budget.update({
@@ -241,7 +313,7 @@ export class KintiService {
           } else {
             await tx.budget.create({
               data: {
-                userId: dto.usuario_id,
+                userId: user.id,
                 category: dto.datos.categoria,
                 amount: dto.datos.monto,
                 month: dto.datos.mes,
@@ -270,16 +342,39 @@ export class KintiService {
   async procesarCallbackSoporte(dto: any): Promise<void> {
     this.logger.log(`Recibido callback SOPORTE de n8n para usuario ${dto.usuario_id}`);
     try {
-      const request = dto.request_id 
+      const user = await this.prisma.user.findFirst({
+        where: {
+          OR: [
+            { id: dto.usuario_id },
+            { phone: dto.usuario_id }
+          ]
+        }
+      });
+      if (!user) throw new NotFoundException('Usuario no encontrado');
+
+      let request = dto.request_id
         ? await this.prisma.aiRequest.findUnique({ where: { id: dto.request_id } })
-        : await this.prisma.aiRequest.findFirst({ where: { userId: dto.usuario_id, status: 'processing' }, orderBy: { createdAt: 'desc' } });
-      
-      if (!request || request.userId !== dto.usuario_id) throw new NotFoundException('Solicitud de IA no encontrada');
+        : await this.prisma.aiRequest.findFirst({
+          where: { userId: user.id, status: 'processing' },
+          orderBy: { createdAt: 'desc' }
+        });
+
+      if (!request && dto.origen === 'telegram') {
+        request = await this.prisma.aiRequest.create({
+          data: {
+            userId: user.id,
+            message: 'Soporte vía Telegram',
+            status: 'processing',
+          }
+        });
+      }
+
+      if (!request || request.userId !== user.id) throw new NotFoundException('Solicitud de IA no encontrada');
       if (request.status === 'completed') return;
 
       const processed = await this.prisma.$transaction(async (tx) => {
         const claim = await tx.aiRequest.updateMany({
-          where: { id: request.id, userId: dto.usuario_id, status: 'processing' },
+          where: { id: request.id, userId: user.id, status: 'processing' },
           data: { status: 'completing' },
         });
         if (claim.count === 0) return false;
@@ -287,7 +382,7 @@ export class KintiService {
         if (dto.accion === 'TICKET' && dto.datos) {
           await tx.ticket.create({
             data: {
-              userId: dto.usuario_id,
+              userId: user.id,
               subject: dto.datos.asunto,
               priority: dto.datos.prioridad || 'media',
               context: dto.respuesta_chat,
