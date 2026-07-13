@@ -42,9 +42,7 @@ export function Home({ dict, locale }: HomeProps) {
   };
   useEffect(() => {
     const storedTheme = localStorage.getItem("kinti_landing_theme");
-    const enabled = storedTheme
-      ? storedTheme === "dark"
-      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const enabled = storedTheme === "dark";
     queueMicrotask(() => setDarkMode(enabled));
   }, []);
   const toggleTheme = () => {
