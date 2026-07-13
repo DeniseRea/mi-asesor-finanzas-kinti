@@ -29,9 +29,9 @@ export function Assistant() {
   const nearLimit = budgets.filter((item) => item.limit > 0 && (expensesByCategory[item.category] ?? 0) / item.limit >= 0.8);
 
   return (
-    <div className="grid h-[calc(100dvh-7rem)] min-h-[36rem] gap-4 xl:grid-cols-[1fr_21rem]">
-      <AppCard className="flex min-h-0 flex-col overflow-hidden">
-        <div className="border-b border-slate-100 p-5">
+    <div className="grid gap-4 xl:h-[calc(100dvh-7rem)] xl:min-h-[36rem] xl:grid-cols-[1fr_21rem]">
+      <AppCard className="flex h-[calc(100dvh-10rem)] min-h-0 flex-col overflow-hidden xl:h-auto">
+        <div className="border-b border-slate-100 p-4 sm:p-5">
           <div className="flex items-center gap-3">
             <span className="grid size-11 place-items-center rounded-full bg-violet-50 text-violet-700"><Sparkles /></span>
             <div>
@@ -45,7 +45,7 @@ export function Assistant() {
           {messages.map((item) => (
             <div key={item.id} className={`flex items-start gap-3 ${item.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               {item.role === 'assistant' && <span className="grid size-9 shrink-0 place-items-center rounded-full bg-slate-950 text-emerald-300 ring-4 ring-emerald-50"><Bot size={18} /></span>}
-              <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 sm:max-w-[70%] ${item.role === 'user' ? 'bg-emerald-800 text-white' : 'border border-slate-200 bg-white text-slate-700'}`}>
+              <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-6 sm:max-w-[70%] ${item.role === 'user' ? 'min-w-24 bg-emerald-800 text-white' : 'border border-slate-200 bg-white text-slate-700'}`}>
                 {item.text}
                 <span className={`mt-1 block text-right ${item.role === 'user' ? 'text-emerald-100' : 'text-slate-400'}`}>{item.createdAt}</span>
               </div>
