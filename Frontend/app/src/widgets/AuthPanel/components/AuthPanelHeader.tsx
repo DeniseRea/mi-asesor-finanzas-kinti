@@ -25,7 +25,7 @@ export function AuthPanelHeader({
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
-    if (route === 'login') {
+    if (route === 'login' || route === 'register') {
       document.documentElement.classList.remove('dark');
       return;
     }
@@ -69,7 +69,7 @@ export function AuthPanelHeader({
             <path d="m6 9 6 6 6-6" />
           </svg>
         </Link>
-        {route !== 'login' ? (
+        {route !== 'login' && route !== 'register' ? (
           <>
             <span aria-hidden="true" className="h-7 w-px bg-slate-200" />
             <button type="button" onClick={toggleTheme} aria-label={changeThemeLabel} aria-pressed={darkMode} className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-600 transition-colors hover:border-emerald-200 hover:bg-emerald-50 hover:text-[#075b40] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075b40]">
