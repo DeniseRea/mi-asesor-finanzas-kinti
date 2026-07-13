@@ -20,9 +20,10 @@ export class BudgetsService {
     });
   }
 
-  async findAll(userId: string) {
+  async findAll(userId: string, month?: number, year?: number) {
     return this.prisma.budget.findMany({
-      where: { userId },
+      where: { userId, ...(month ? { month } : {}), ...(year ? { year } : {}) },
+      orderBy: { category: 'asc' },
     });
   }
 

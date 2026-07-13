@@ -13,7 +13,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { sub: string; email: string; jti?: string; exp?: number }) {
+  async validate(payload: {
+    sub: string;
+    email: string;
+    jti?: string;
+    exp?: number;
+  }) {
     if (payload.jti) {
       const revoked = await this.prisma.revokedToken.findUnique({
         where: { tokenJti: payload.jti },
@@ -23,6 +28,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       }
     }
 
-    return { id: payload.sub, email: payload.email, jti: payload.jti, tokenExp: payload.exp };
+    return {
+      id: payload.sub,
+      email: payload.email,
+      jti: payload.jti,
+      tokenExp: payload.exp,
+    };
   }
 }

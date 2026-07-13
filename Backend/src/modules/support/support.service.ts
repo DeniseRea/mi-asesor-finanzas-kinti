@@ -44,7 +44,11 @@ export class SupportService {
     return ticket;
   }
 
-  async addTicketMessage(userId: string, ticketId: string, dto: CreateMessageDto) {
+  async addTicketMessage(
+    userId: string,
+    ticketId: string,
+    dto: CreateMessageDto,
+  ) {
     // Verificar propiedad/existencia del ticket
     await this.findTicketById(userId, ticketId);
 

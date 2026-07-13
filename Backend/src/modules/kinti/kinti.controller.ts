@@ -1,4 +1,17 @@
-import { Controller, Post, Get, Body, UploadedFile, UseInterceptors, HttpCode, HttpStatus, Req, UseGuards, UnauthorizedException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  UploadedFile,
+  UseInterceptors,
+  HttpCode,
+  HttpStatus,
+  Req,
+  UseGuards,
+  UnauthorizedException,
+  Query,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { KintiService } from './kinti.service';
 import { KintiWebhookDto } from './dto/kinti-webhook.dto';
@@ -15,22 +28,23 @@ export class KintiController {
    * Dispara el flujo hacia n8n.
    */
   @Post('kinti/procesar')
+  @HttpCode(HttpStatus.ACCEPTED)
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file'))
   async enviarAIA(
-    @Body() dto: ProcesarMensajeDto, 
+    @Body() dto: ProcesarMensajeDto,
     @UploadedFile() file: Express.Multer.File,
-    @Req() req: any
+    @Req() req: any,
   ) {
     // Validar que el usuario solo puede procesar para sí mismo
     if (dto.usuario_id !== req.user.id) {
-      throw new UnauthorizedException('No puedes procesar datos en nombre de otro usuario');
+      throw new UnauthorizedException(
+        'No puedes procesar datos en nombre de otro usuario',
+      );
     }
 
     // Retorna la promesa, que no bloquea la respuesta final de la IA
-    await this.kintiService.sendMessageToAI(dto.usuario_id, dto.mensaje, file);
-    
-    return { status: 'recibido, procesando' };
+    return this.kintiService.sendMessageToAI(dto.usuario_id, dto.mensaje, file);
   }
 
   /**
@@ -39,9 +53,17 @@ export class KintiController {
    */
   @Get('kinti/respuesta')
   @UseGuards(JwtAuthGuard)
-  async obtenerRespuesta(@Req() req: any) {
-    const respuesta = this.kintiService.obtenerRespuestaPendiente(req.user.id);
-    return { respuesta };
+  async obtenerRespuesta(
+    @Req() req: any,
+    @Query('requestId') requestId: string,
+  ) {
+    return this.kintiService.obtenerRespuesta(req.user.id, requestId);
+  }
+
+  @Get('kinti/historial')
+  @UseGuards(JwtAuthGuard)
+  async historial(@Req() req: any) {
+    return this.kintiService.historial(req.user.id);
   }
 
   /**
@@ -51,13 +73,13 @@ export class KintiController {
   @HttpCode(HttpStatus.OK)
   async recibirCallbackDeIA(
     @Body() payload: KintiWebhookDto,
-    @Req() request: Request
+    @Req() request: Request,
   ) {
     // Validación de seguridad (El secret debe coincidir con el configurado en el nodo HTTP de n8n)
     const webhookSecret = process.env.N8N_WEBHOOK_SECRET;
     const clientSecret = request.headers['x-kinti-secret'];
-    
-    if (webhookSecret && clientSecret !== webhookSecret) {
+
+    if (!webhookSecret || clientSecret !== webhookSecret) {
       throw new UnauthorizedException('Secret de webhook inválido');
     }
 

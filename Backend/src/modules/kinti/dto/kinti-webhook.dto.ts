@@ -1,4 +1,11 @@
-import { IsString, IsArray, ValidateNested, IsNumber, IsOptional, IsIn } from 'class-validator';
+import {
+  IsString,
+  IsArray,
+  ValidateNested,
+  IsNumber,
+  IsOptional,
+  IsIn,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class MovimientoDto {
@@ -21,6 +28,10 @@ export class MovimientoDto {
 }
 
 export class KintiWebhookDto {
+  @IsString()
+  @IsOptional()
+  request_id?: string;
+
   @IsString()
   usuario_id: string;
 

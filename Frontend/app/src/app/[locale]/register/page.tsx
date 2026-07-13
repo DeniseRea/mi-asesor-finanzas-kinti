@@ -1,5 +1,6 @@
 import { Register } from '@/pageviews/register/Register';
 import { getRegisterDictionary } from '@/shared/i18n/dictionaries/register';
+import { PublicOnlyGuard } from '@/shared/components/PublicOnlyGuard';
 
 interface PageProps {
   params: Promise<{ locale: string }>;
@@ -10,5 +11,5 @@ export default async function RegisterPage({ params }: PageProps) {
   const currentLocale = locale === 'en' ? 'en' : 'es';
   const dict = getRegisterDictionary(currentLocale);
 
-  return <Register dict={dict} locale={currentLocale} />;
+  return <PublicOnlyGuard locale={currentLocale}><Register dict={dict} locale={currentLocale} /></PublicOnlyGuard>;
 }

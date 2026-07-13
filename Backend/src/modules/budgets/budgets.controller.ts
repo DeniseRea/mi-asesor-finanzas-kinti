@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  Request,
+  Query,
+} from '@nestjs/common';
 import { BudgetsService } from './budgets.service';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { UpdateBudgetDto } from './dto/update-budget.dto';
@@ -15,12 +26,24 @@ export class BudgetsController {
   }
 
   @Get()
-  findAll(@Request() req) {
-    return this.budgetsService.findAll(req.user.id);
+  findAll(
+    @Request() req,
+    @Query('month') month?: string,
+    @Query('year') year?: string,
+  ) {
+    return this.budgetsService.findAll(
+      req.user.id,
+      month ? Number(month) : undefined,
+      year ? Number(year) : undefined,
+    );
   }
 
   @Patch(':id')
-  update(@Request() req, @Param('id') id: string, @Body() dto: UpdateBudgetDto) {
+  update(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() dto: UpdateBudgetDto,
+  ) {
     return this.budgetsService.update(req.user.id, id, dto);
   }
 

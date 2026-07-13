@@ -8,7 +8,9 @@ export function proxy(request: NextRequest) {
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
   );
   if (pathnameHasLocale) return;
-  request.nextUrl.pathname = `/es${pathname}`;
+  const segments = pathname.split('/').filter(Boolean);
+  if (segments[0] && /^[a-z]{2}(?:-[A-Z]{2})?$/.test(segments[0])) segments.shift();
+  request.nextUrl.pathname = `/es${segments.length ? `/${segments.join('/')}` : ''}`;
   return NextResponse.redirect(request.nextUrl);
 }
 

@@ -8,6 +8,7 @@ import type { Locale } from '@/shared/i18n/config';
 import type { RegisterDictionary } from '@/shared/i18n/dictionaries/register';
 import { useAuth } from '@/shared/lib/auth-context';
 import { isStrongPassword, isValidEmail, isValidName, MAX_EMAIL_LENGTH, MAX_NAME_LENGTH, MAX_PASSWORD_LENGTH, normalizeEmail } from '../lib/validation';
+import { getAuthErrorMessage } from '../lib/auth-errors';
 import { VerificationCodeForm } from './VerificationCodeForm';
 
 interface RegisterFormProps {
@@ -56,6 +57,7 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [error, setError] = useState('');
+  const [verificationToken, setVerificationToken] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { register, loginWithGoogle, verifyEmail, resendVerification } = useAuth();
   const router = useRouter();
@@ -65,9 +67,9 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
     setIsSubmitting(true);
     try {
       await loginWithGoogle();
-      router.push(`/${locale}/dashboard/completar-perfil`);
+      router.replace(`/${locale}/dashboard/completar-perfil`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al iniciar sesion con Google');
+      setError(getAuthErrorMessage(err, locale));
     } finally {
       setIsSubmitting(false);
     }
@@ -93,10 +95,11 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
     try {
       const normalizedEmail = normalizeEmail(email);
       setEmail(normalizedEmail);
-      await register({ name, email: normalizedEmail, password, confirmPassword: confirmation });
+      const result = await register({ name, email: normalizedEmail, password, confirmPassword: confirmation });
+      setVerificationToken(result.verificationToken);
       setStep('verification');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al crear la cuenta');
+      setError(getAuthErrorMessage(err, locale));
     } finally {
       setIsSubmitting(false);
     }
@@ -104,13 +107,18 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
 
   const handleVerify = async (code: string) => {
     const normalizedEmail = normalizeEmail(email);
-    await verifyEmail({ email: normalizedEmail, code });
-    router.push(`/${locale}/login`);
+    if (!verificationToken) throw new Error(locale === 'es' ? 'La verificación expiró. Inicia nuevamente.' : 'Verification expired. Start again.');
+    try { await verifyEmail({ email: normalizedEmail, code, verificationToken }); }
+    catch (reason) { throw new Error(getAuthErrorMessage(reason, locale)); }
+    sessionStorage.setItem('kinti_auth_feedback', 'account_verified');
+    router.replace(`/${locale}/login`);
   };
 
   const handleResend = async () => {
     const normalizedEmail = normalizeEmail(email);
-    await resendVerification({ email: normalizedEmail });
+    if (!verificationToken) throw new Error(locale === 'es' ? 'La verificación expiró. Inicia nuevamente.' : 'Verification expired. Start again.');
+    try { const result = await resendVerification({ email: normalizedEmail, verificationToken }); setVerificationToken(result.verificationToken); }
+    catch (reason) { throw new Error(getAuthErrorMessage(reason, locale)); }
   };
 
   if (step === 'verification') {
@@ -126,7 +134,11 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
         invalidCodeMessage={dict.verification.invalidCode}
         onVerify={handleVerify}
         onResend={handleResend}
-        onChangeEmail={() => setStep('details')}
+        onChangeEmail={() => { setVerificationToken(''); setStep('details'); }}
+        verifyingLabel={locale === 'es' ? 'Verificando cuenta…' : 'Verifying account…'}
+        resendingLabel={locale === 'es' ? 'Enviando…' : 'Sending…'}
+        resendSuccessMessage={locale === 'es' ? 'Solicitamos un nuevo código. Revisa tu correo.' : 'We requested a new code. Check your email.'}
+        waitLabel={(seconds) => locale === 'es' ? `Reintenta en ${seconds}s` : `Try again in ${seconds}s`}
       />
     );
   }
@@ -140,7 +152,7 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          <div role="alert" aria-live="assertive" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             {error}
           </div>
         )}
@@ -174,7 +186,7 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
         </label>
 
         <button type="submit" disabled={isSubmitting} className="relative flex min-h-12 w-full items-center justify-center rounded-xl bg-[#075b40] px-5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(7,91,64,0.2)] transition hover:bg-[#064c36] active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075b40] disabled:opacity-60 disabled:cursor-not-allowed">
-          {isSubmitting ? '...' : dict.submit}
+          {isSubmitting ? (locale === 'es' ? 'Creando cuenta…' : 'Creating account…') : dict.submit}
           {!isSubmitting && (
             <svg aria-hidden="true" className="absolute right-5 h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7 7 7-7 7" /></svg>
           )}

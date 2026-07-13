@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { SupportService } from './support.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { CreateMessageDto } from './dto/create-message.dto';
@@ -29,7 +37,11 @@ export class SupportController {
 
   @UseGuards(JwtAuthGuard)
   @Post('tickets/:id/messages')
-  addTicketMessage(@Request() req, @Param('id') id: string, @Body() dto: CreateMessageDto) {
+  addTicketMessage(
+    @Request() req,
+    @Param('id') id: string,
+    @Body() dto: CreateMessageDto,
+  ) {
     return this.supportService.addTicketMessage(req.user.id, id, dto);
   }
 

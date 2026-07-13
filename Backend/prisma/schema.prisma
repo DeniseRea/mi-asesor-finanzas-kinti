@@ -14,6 +14,10 @@ model User {
   password             String?
   phone                String?
   currency             String    @default("USD")
+  darkMode             Boolean   @default(false)
+  budgetAlerts         Boolean   @default(true)
+  movementAlerts       Boolean   @default(true)
+  insightAlerts        Boolean   @default(true)
   emailVerified        Boolean   @default(false)
   verificationCode     String?
   verificationExpires  DateTime?
@@ -24,6 +28,40 @@ model User {
   budgets      Budget[]
   alerts       Alert[]
   tickets      Ticket[]
+  passwordResets PasswordReset[]
+  aiRequests   AiRequest[]
+}
+
+model PasswordReset {
+  id        String   @id @default(uuid())
+  userId    String
+  codeHash  String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  verifiedAt DateTime?
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model AiRequest {
+  id           String   @id @default(uuid())
+  userId       String
+  message      String?
+  fileName     String?
+  status       String   @default("processing")
+  responseText String?
+  errorMessage String?
+  createdAt    DateTime @default(now())
+  completedAt  DateTime?
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+
+  @@index([userId, createdAt])
 }
 
 model RevokedToken {
@@ -44,8 +82,10 @@ model Transaction {
   description String?
   confirmed   Boolean  @default(false)
   createdAt   DateTime @default(now())
+  aiRequestId String?
 
-  user User @relation(fields: [userId], references: [id])
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  aiRequest AiRequest? @relation(fields: [aiRequestId], references: [id], onDelete: SetNull)
 }
 
 model Budget {
@@ -58,7 +98,7 @@ model Budget {
   threshold Float    @default(80)
   createdAt DateTime @default(now())
 
-  user   User    @relation(fields: [userId], references: [id])
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   alerts Alert[]
 }
 
@@ -71,8 +111,8 @@ model Alert {
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  user   User   @relation(fields: [userId], references: [id])
-  budget Budget @relation(fields: [budgetId], references: [id])
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  budget Budget @relation(fields: [budgetId], references: [id], onDelete: Cascade)
 }
 
 model Ticket {
@@ -84,7 +124,7 @@ model Ticket {
   context   String?
   createdAt DateTime @default(now())
 
-  user     User            @relation(fields: [userId], references: [id])
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages TicketMessage[]
 }
 
@@ -95,7 +135,7 @@ model TicketMessage {
   content   String
   createdAt DateTime @default(now())
 
-  ticket Ticket @relation(fields: [ticketId], references: [id])
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 }
 
 model KnowledgeBase {

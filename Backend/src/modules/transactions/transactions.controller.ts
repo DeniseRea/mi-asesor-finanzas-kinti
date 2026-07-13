@@ -1,4 +1,16 @@
-import { Controller, Post, Get, Delete, Body, Query, Param, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Delete,
+  Body,
+  Query,
+  Param,
+  UseGuards,
+  Req,
+  Headers,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { ImportCsvDto } from './dto/import-csv.dto';
@@ -9,7 +21,15 @@ export class TransactionsController {
   constructor(private transactionsService: TransactionsService) {}
 
   @Post('webhook')
-  webhook(@Body() dto: CreateTransactionDto) {
+  webhook(
+    @Body() dto: CreateTransactionDto,
+    @Headers('x-kinti-secret') secret?: string,
+  ) {
+    if (
+      !process.env.N8N_WEBHOOK_SECRET ||
+      secret !== process.env.N8N_WEBHOOK_SECRET
+    )
+      throw new UnauthorizedException('Secret de webhook inválido');
     return this.transactionsService.create(dto);
   }
 
@@ -29,7 +49,12 @@ export class TransactionsController {
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    return this.transactionsService.findAll(req.user.id, { type, category, from, to });
+    return this.transactionsService.findAll(req.user.id, {
+      type,
+      category,
+      from,
+      to,
+    });
   }
 
   @UseGuards(JwtAuthGuard)
@@ -39,6 +64,7 @@ export class TransactionsController {
   }
 
   @Post('csv')
+  @UseGuards(JwtAuthGuard)
   parseCsv(@Body() body: { csv: string }) {
     return this.transactionsService.parseCsv(body.csv);
   }

@@ -1,7 +1,5 @@
 import type { AssistantMessage, Budget, Notification, SupportTicket, Transaction, UserPreferences } from './types';
 
-export const categories = ['Comida', 'Transporte', 'Servicios', 'Entretenimiento', 'Salud', 'Educación', 'Otros'];
-
 export const initialTransactions: Transaction[] = [
   { id: 'mov-1', description: 'Compra de víveres', merchant: 'Supermercado Santa María', category: 'Comida', type: 'expense', amount: 45.2, date: '2026-07-10T10:30:00', origin: 'Telegram' },
   { id: 'mov-2', description: 'Viaje al trabajo', merchant: 'Uber', category: 'Transporte', type: 'expense', amount: 12.5, date: '2026-07-10T09:15:00', origin: 'Telegram' },

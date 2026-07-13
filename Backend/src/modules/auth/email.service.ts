@@ -16,7 +16,9 @@ export class EmailService {
         auth: { user, pass },
       });
     } else {
-      this.logger.warn('SMTP_EMAIL/SMTP_PASSWORD no configurados. Los emails no se enviarán.');
+      this.logger.warn(
+        'SMTP_EMAIL/SMTP_PASSWORD no configurados. Los emails no se enviarán.',
+      );
     }
   }
 
@@ -54,5 +56,18 @@ export class EmailService {
       this.logger.error(`Error al enviar email a ${email}: ${error.message}`);
       this.logger.warn(`[DEV] Código de verificación para ${email}: ${code}`);
     }
+  }
+
+  async sendPasswordResetCode(email: string, code: string): Promise<void> {
+    if (!this.transporter) {
+      this.logger.warn(`[DEV] Código de recuperación para ${email}: ${code}`);
+      return;
+    }
+    await this.transporter.sendMail({
+      from: '"Kinti" <kinti.app@gmail.com>',
+      to: email,
+      subject: 'Recupera tu contraseña de Kinti',
+      html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px"><h2 style="color:#075b40">Recupera tu contraseña</h2><p>Usa este código de un solo uso:</p><p style="font-size:36px;font-weight:bold;letter-spacing:8px">${code}</p><p>Expira en 15 minutos. Si no solicitaste el cambio, ignora este mensaje.</p></div>`,
+    });
   }
 }

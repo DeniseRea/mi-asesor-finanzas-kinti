@@ -34,7 +34,7 @@ export class AlertsService {
 
   /**
    * Lógica para verificar el umbral y generar alertas al crear un gasto.
-   * 
+   *
    * TODO (Julio): Llama a este método en tu servicio de Transacciones (RF-02)
    * justo después de crear exitosamente una transacción de tipo gasto/egreso.
    * Ejemplo:
@@ -45,7 +45,12 @@ export class AlertsService {
    *     date: transaction.date,
    *   });
    */
-  async onTransactionCreated(transaction: { userId: string; category: string; amount: number; date: Date }) {
+  async onTransactionCreated(transaction: {
+    userId: string;
+    category: string;
+    amount: number;
+    date: Date;
+  }) {
     const txDate = new Date(transaction.date);
     const transactionMonth = txDate.getMonth() + 1;
     const transactionYear = txDate.getFullYear();
@@ -63,13 +68,23 @@ export class AlertsService {
     for (const budget of budgets) {
       // 2. Calcular la suma total gastada en este mes y año para esta categoría
       const startOfMonth = new Date(transactionYear, transactionMonth - 1, 1);
-      const endOfMonth = new Date(transactionYear, transactionMonth, 0, 23, 59, 59, 999);
+      const endOfMonth = new Date(
+        transactionYear,
+        transactionMonth,
+        0,
+        23,
+        59,
+        59,
+        999,
+      );
 
       const expenseAggregate = await this.prisma.transaction.aggregate({
         where: {
           userId: transaction.userId,
           category: budget.category,
-          type: { in: ['expense', 'gasto', 'EXPENSE', 'GASTO', 'egreso', 'EGRESO'] },
+          type: {
+            in: ['expense', 'gasto', 'EXPENSE', 'GASTO', 'egreso', 'EGRESO'],
+          },
           date: {
             gte: startOfMonth,
             lte: endOfMonth,
@@ -101,7 +116,16 @@ export class AlertsService {
               read: false,
             },
           });
+        } else {
+          await this.prisma.alert.update({
+            where: { id: existingAlert.id },
+            data: {
+              message: `¡Alerta! Has gastado ${totalSpent.toFixed(2)} de un presupuesto de ${budget.amount.toFixed(2)} para la categoría '${budget.category}'. Se ha superado el umbral del ${budget.threshold}%.`,
+            },
+          });
         }
+      } else {
+        await this.prisma.alert.deleteMany({ where: { budgetId: budget.id } });
       }
     }
   }

@@ -12,7 +12,7 @@ import { KintiModule } from './modules/kinti/kinti.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['.env.dev', '.env'],
+      envFilePath: ['../.env'],
     }),
     PrismaModule,
     AuthModule,

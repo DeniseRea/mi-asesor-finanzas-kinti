@@ -4,9 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Bell, Globe2, Menu, Moon, Plus, Search, Sun } from 'lucide-react';
 import { useFinance } from '@/entities/finance/model/FinanceProvider';
+import { useAuth } from '@/shared/lib/auth-context';
 
 export function Topbar({ locale, onMenuAction: onMenu, onNotificationsAction: onNotifications }: { locale: 'es' | 'en'; onMenuAction: () => void; onNotificationsAction: () => void }) {
   const { notifications, preferences, dispatch } = useFinance();
+  const { user } = useAuth();
   const pathname = usePathname();
   const isHome = pathname === `/${locale}/dashboard`;
   const section = pathname.split('/')[3] ?? '';
@@ -20,7 +22,7 @@ export function Topbar({ locale, onMenuAction: onMenu, onNotificationsAction: on
     configuracion: { title: 'Configuración', subtitle: 'Personaliza tu experiencia en Kinti y administra tu cuenta.' },
     'completar-perfil': { title: 'Completa tu perfil', subtitle: 'Deja listas tus preferencias principales.' },
   };
-  const heading = isHome ? { title: locale === 'es' ? '¡Hola, María! 👋' : 'Hello, María! 👋', subtitle: locale === 'es' ? 'Miércoles, 10 de julio' : 'Wednesday, July 10' } : headings[section] ?? { title: 'Kinti', subtitle: '' };
+  const heading = isHome ? { title: locale === 'es' ? `¡Hola, ${user?.name ?? 'Usuario'}! 👋` : `Hello, ${user?.name ?? 'User'}! 👋`, subtitle: new Intl.DateTimeFormat(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date()) } : headings[section] ?? { title: 'Kinti', subtitle: '' };
   const isBudgetPage = section === 'presupuestos' && !detail;
   const showTransactionAction = isHome || (section === 'movimientos' && !detail);
   const unread = notifications.filter((item) => !item.read).length;

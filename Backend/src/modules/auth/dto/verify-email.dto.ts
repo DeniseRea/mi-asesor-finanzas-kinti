@@ -7,4 +7,7 @@ export class VerifyEmailDto {
   @IsString()
   @Matches(/^\d{6}$/, { message: 'El código debe ser de 6 dígitos' })
   code: string;
+
+  @IsString()
+  verificationToken: string;
 }

@@ -9,10 +9,18 @@ export class RegisterDto {
 
   @IsString()
   @MinLength(8)
-  @Matches(/^(?=.*[a-z])/, { message: 'Password must include at least one lowercase letter' })
-  @Matches(/^(?=.*[A-Z])/, { message: 'Password must include at least one uppercase letter' })
-  @Matches(/^(?=.*\d)/, { message: 'Password must include at least one number' })
-  @Matches(/^(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?])/, { message: 'Password must include at least one symbol' })
+  @Matches(/^(?=.*[a-z])/, {
+    message: 'Password must include at least one lowercase letter',
+  })
+  @Matches(/^(?=.*[A-Z])/, {
+    message: 'Password must include at least one uppercase letter',
+  })
+  @Matches(/^(?=.*\d)/, {
+    message: 'Password must include at least one number',
+  })
+  @Matches(/[^\p{L}\p{N}\s]/u, {
+    message: 'Password must include at least one symbol',
+  })
   password: string;
 
   @IsString()

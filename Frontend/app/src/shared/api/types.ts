@@ -20,12 +20,8 @@ export interface RegisterRequest {
 }
 
 export interface RegisterResponse {
-  user: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  token: string;
+  verificationToken: string;
+  expiresIn: number;
 }
 
 export interface ProfileResponse {
@@ -39,6 +35,7 @@ export interface ProfileResponse {
 export interface VerifyEmailRequest {
   email: string;
   code: string;
+  verificationToken: string;
 }
 
 export interface VerifyEmailResponse {
@@ -47,10 +44,12 @@ export interface VerifyEmailResponse {
 
 export interface ResendVerificationRequest {
   email: string;
+  verificationToken: string;
 }
 
 export interface ResendVerificationResponse {
   message: string;
+  verificationToken: string;
 }
 
 export interface LogoutResponse {

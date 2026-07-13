@@ -76,9 +76,11 @@ docker build -f Dockerfile.prod -t kinti-backend .
 ```
 
 ### Variables de entorno en Railway
-Copiar el contenido de `.env.prod` y reemplazar los placeholders:
+Usar `.env.example` como referencia y configurar las variables en Railway:
 - `DATABASE_URL` → Railway provee la URL de PostgreSQL
 - `JWT_SECRET` → Generar un secreto fuerte
+- `N8N_WEBHOOK_URL` → URL productiva del webhook de n8n
+- `N8N_WEBHOOK_SECRET` → Secreto compartido con el callback de n8n
 
 ### Deploy
 Railway detecta automáticamente el `Dockerfile.prod` y ejecuta:

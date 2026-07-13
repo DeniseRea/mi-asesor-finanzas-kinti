@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { AlertsService } from '../alerts/alerts.service';
@@ -36,7 +40,11 @@ export class TransactionsService {
     });
 
     // Si es un gasto/egreso, evaluar alertas de presupuestos
-    if (transaction.type === 'GASTO' || transaction.type === 'expense' || transaction.type === 'gasto') {
+    if (
+      transaction.type === 'GASTO' ||
+      transaction.type === 'expense' ||
+      transaction.type === 'gasto'
+    ) {
       try {
         await this.alertsService.onTransactionCreated({
           userId: transaction.userId,
@@ -62,7 +70,10 @@ export class TransactionsService {
     };
   }
 
-  async findAll(userId: string, filters?: { type?: string; category?: string; from?: string; to?: string }) {
+  async findAll(
+    userId: string,
+    filters?: { type?: string; category?: string; from?: string; to?: string },
+  ) {
     const where: any = { userId };
 
     if (filters?.type) {
@@ -77,7 +88,9 @@ export class TransactionsService {
         where.date.gte = new Date(filters.from);
       }
       if (filters.to) {
-        where.date.lte = new Date(filters.to);
+        const end = new Date(filters.to);
+        end.setHours(23, 59, 59, 999);
+        where.date.lte = end;
       }
     }
 
@@ -103,7 +116,14 @@ export class TransactionsService {
   async getSummary(userId: string) {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    const endOfMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+    );
 
     const transactions = await this.prisma.transaction.findMany({
       where: {
@@ -146,7 +166,9 @@ export class TransactionsService {
     });
 
     if (result.errors.length > 0) {
-      throw new BadRequestException(`Errores al parsear CSV: ${result.errors.map((e) => e.message).join(', ')}`);
+      throw new BadRequestException(
+        `Errores al parsear CSV: ${result.errors.map((e) => e.message).join(', ')}`,
+      );
     }
 
     const validTransactions: CreateTransactionDto[] = [];
@@ -177,7 +199,8 @@ export class TransactionsService {
           monto: amount,
           categoria: row.categoria || row.category || 'otros',
           entidad: row.entidad || row.entity || undefined,
-          fecha: row.fecha || row.date || new Date().toISOString().split('T')[0],
+          fecha:
+            row.fecha || row.date || new Date().toISOString().split('T')[0],
           descripcion: row.descripcion || row.description || undefined,
         });
       } catch (e) {
@@ -212,6 +235,16 @@ export class TransactionsService {
       })),
     });
 
+    for (const item of transactions.filter(
+      (transaction) => transaction.accion === 'GASTO',
+    )) {
+      await this.alertsService.onTransactionCreated({
+        userId,
+        category: item.categoria,
+        amount: item.monto,
+        date: item.fecha ? new Date(item.fecha) : new Date(),
+      });
+    }
     return {
       imported: created.count,
       usuario_id: userId,
@@ -219,7 +252,9 @@ export class TransactionsService {
   }
 
   async remove(id: string, userId: string) {
-    const transaction = await this.prisma.transaction.findUnique({ where: { id } });
+    const transaction = await this.prisma.transaction.findUnique({
+      where: { id },
+    });
     if (!transaction) {
       throw new NotFoundException('Transacción no encontrada');
     }
@@ -228,6 +263,13 @@ export class TransactionsService {
     }
 
     await this.prisma.transaction.delete({ where: { id } });
+    if (['GASTO', 'expense', 'gasto'].includes(transaction.type))
+      await this.alertsService.onTransactionCreated({
+        userId,
+        category: transaction.category,
+        amount: 0,
+        date: transaction.date,
+      });
     return { deleted: true };
   }
 }

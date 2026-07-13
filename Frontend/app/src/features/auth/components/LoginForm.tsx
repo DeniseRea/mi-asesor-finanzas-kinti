@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import type { Locale } from '@/shared/i18n/config';
 import type { LoginDictionary } from '@/shared/i18n/dictionaries/login';
 import { useAuth } from '@/shared/lib/auth-context';
-import { isStrongPassword, isValidEmail, MAX_EMAIL_LENGTH, MAX_PASSWORD_LENGTH, normalizeEmail } from '../lib/validation';
+import { isValidEmail, MAX_EMAIL_LENGTH, MAX_PASSWORD_LENGTH, normalizeEmail } from '../lib/validation';
+import { getAuthErrorMessage } from '../lib/auth-errors';
 
 interface LoginFormProps {
   dict: LoginDictionary;
@@ -19,27 +20,45 @@ export function LoginForm({ dict, locale }: LoginFormProps) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, loginWithGoogle, isAuthenticated, isLoading } = useAuth();
+  const { login, loginWithGoogle, isAuthenticated, isLoading, sessionNotice, clearSessionNotice } = useAuth();
   const router = useRouter();
-  const dashboardHref = `/${locale}/dashboard`;
+  const searchParams = useSearchParams();
+  const requested = searchParams.get('next');
+  const dashboardHref = requested?.startsWith(`/${locale}/dashboard`) ? requested : `/${locale}/dashboard`;
 
   useEffect(() => {
     router.prefetch(dashboardHref);
   }, [dashboardHref, router]);
 
   useEffect(() => {
+    if (sessionStorage.getItem('kinti_auth_feedback') !== 'account_verified') return;
+    sessionStorage.removeItem('kinti_auth_feedback');
+    queueMicrotask(() => setSuccess(locale === 'es' ? 'Cuenta verificada correctamente. Ya puedes iniciar sesión.' : 'Account verified successfully. You can now sign in.'));
+  }, [locale]);
+
+  const sessionError = sessionNotice === 'expired'
+    ? (locale === 'es' ? 'Tu sesión venció. Inicia sesión nuevamente.' : 'Your session expired. Please sign in again.')
+    : sessionNotice === 'unavailable'
+      ? (locale === 'es' ? 'No pudimos restaurar tu sesión. Inicia sesión nuevamente.' : 'We could not restore your session. Please sign in again.')
+      : '';
+  const visibleError = error || sessionError;
+
+  useEffect(() => {
     if (!isLoading && isAuthenticated) router.replace(dashboardHref);
   }, [dashboardHref, isAuthenticated, isLoading, router]);
 
   const handleGoogleLogin = async () => {
+    clearSessionNotice();
+    setSuccess('');
     setError('');
     setIsSubmitting(true);
     try {
       await loginWithGoogle();
       router.replace(dashboardHref);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al iniciar sesion con Google');
+      setError(getAuthErrorMessage(err, locale));
     } finally {
       setIsSubmitting(false);
     }
@@ -47,13 +66,15 @@ export function LoginForm({ dict, locale }: LoginFormProps) {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    clearSessionNotice();
+    setSuccess('');
     setError('');
 
     const emailInput = event.currentTarget.elements.namedItem('email') as HTMLInputElement;
     const passwordInput = event.currentTarget.elements.namedItem('password') as HTMLInputElement;
 
     emailInput.setCustomValidity(isValidEmail(email) ? '' : dict.validation.email);
-    passwordInput.setCustomValidity(isStrongPassword(password) ? '' : dict.validation.password);
+    passwordInput.setCustomValidity(password.length >= 1 && password.length <= MAX_PASSWORD_LENGTH ? '' : dict.validation.password);
 
     if (!event.currentTarget.reportValidity()) return;
 
@@ -62,7 +83,7 @@ export function LoginForm({ dict, locale }: LoginFormProps) {
       await login({ email, password });
       router.replace(dashboardHref);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al iniciar sesion');
+      setError(getAuthErrorMessage(err, locale));
     } finally {
       setIsSubmitting(false);
     }
@@ -85,9 +106,10 @@ export function LoginForm({ dict, locale }: LoginFormProps) {
       </div>
 
       <form onSubmit={handleSubmit} className="w-full space-y-5">
-        {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-            {error}
+        {success && <div role="status" aria-live="polite" className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">{success}</div>}
+        {visibleError && (
+          <div role="alert" aria-live="assertive" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+            {visibleError}
           </div>
         )}
 
@@ -172,7 +194,7 @@ export function LoginForm({ dict, locale }: LoginFormProps) {
           disabled={isSubmitting}
           className="relative flex min-h-14 w-full items-center justify-center rounded-xl bg-[#075b40] px-5 text-base font-semibold text-white shadow-[0_8px_20px_rgba(7,91,64,0.2)] transition hover:bg-[#064c36] active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075b40] disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          <span>{isSubmitting ? '...' : dict.submit}</span>
+          <span>{isSubmitting ? (locale === 'es' ? 'Iniciando sesión…' : 'Signing in…') : dict.submit}</span>
           {!isSubmitting && (
             <svg aria-hidden="true" className="absolute right-5" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M5 12h14m-7-7 7 7-7 7" />

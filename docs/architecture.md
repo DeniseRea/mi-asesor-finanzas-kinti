@@ -504,16 +504,17 @@ sequenceDiagram
 
 ## 7. Variables de Entorno
 
-| Variable | Dev (.env.dev) | Production (.env.prod) | Descripción |
+| Variable | Desarrollo | Producción | Descripción |
 |---|---|---|---|
 | `DATABASE_URL` | `postgresql://kinti:kinti123@localhost:5432/kinti_dev` | `postgresql://USER:PASSWORD@HOST:PORT/DB_NAME` | URL de conexión a la DB |
 | `JWT_SECRET` | `kinti-dev-secret-key-hackathon` | `YOUR_PRODUCTION_SECRET_HERE` | Clave para firmar JWTs |
 | `PORT` | `3001` | `3001` | Puerto del backend |
 
-### Archivos de entorno
+### Archivo de entorno
 
-- `.env.dev` - Valores para desarrollo local (PostgreSQL via Docker)
-- `.env.prod` - Placeholders para producción (Railway)
+- `.env` en la raíz es la única fuente local para backend, frontend y Docker Compose; permanece ignorado por Git.
+- `.env.example` documenta todas las claves sin incluir secretos.
+- En Railway se configuran las mismas claves directamente como variables del servicio.
 
 ### Nota sobre SQLite (eliminado)
 
