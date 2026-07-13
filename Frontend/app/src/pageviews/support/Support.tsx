@@ -1,15 +1,165 @@
-'use client';
-import { useEffect,useState } from 'react';
-import Link from 'next/link';
-import { BookOpen,Send } from 'lucide-react';
-import { useFinance } from '@/entities/finance/model/FinanceProvider';
-import { financeApi } from '@/entities/finance/api/financeApi';
-import { AppCard } from '@/shared/components/AppCard';
-import { PageHeader } from '@/shared/components/PageHeader';
-type Entry={id:string;title:string;content:string;category:string};
-export function Support({locale}:{locale:'es'|'en'}){
- const {tickets,dispatch,isDemo}=useFinance();const [entries,setEntries]=useState<Entry[]>([]);const [topic,setTopic]=useState('Movimientos');const [subject,setSubject]=useState('');const [message,setMessage]=useState('');const [status,setStatus]=useState('');
- useEffect(()=>{if(!isDemo)void financeApi.knowledgeBase().then(setEntries).catch(caught=>setStatus(caught instanceof Error?caught.message:'No pudimos cargar la ayuda.'));},[isDemo]);
- const submit=async(event:React.FormEvent)=>{event.preventDefault();if(subject.trim().length<3||message.trim().length<10){setStatus('Completa un asunto y una consulta de al menos 10 caracteres.');return;}try{await dispatch({type:'createTicket',payload:{subject:subject.trim(),summary:message.trim(),priority:topic==='Seguridad'?'high':'medium'}});setSubject('');setMessage('');setStatus('Consulta creada correctamente.');}catch(caught){setStatus(caught instanceof Error?caught.message:'No pudimos crear la consulta.');}};
- return <div className="space-y-6"><PageHeader title="Soporte" subtitle="Consulta la base de conocimiento o contacta al equipo."/>{status&&<p role="status" className="rounded-xl bg-slate-50 p-3 text-sm">{status}</p>}<div className="grid gap-4 xl:grid-cols-[1fr_20rem]"><div className="space-y-4"><AppCard className="p-5"><h2 className="text-lg font-bold">Centro de ayuda</h2>{entries.length?<div className="mt-5 grid gap-3 md:grid-cols-2">{entries.map(entry=><article key={entry.id} className="rounded-2xl border p-4"><BookOpen className="text-emerald-700"/><span className="mt-3 block text-xs font-bold uppercase text-slate-400">{entry.category}</span><h3 className="mt-1 font-bold">{entry.title}</h3><p className="mt-2 text-sm text-slate-600">{entry.content}</p></article>)}</div>:<p className="mt-4 text-sm text-slate-500">No hay artículos publicados todavía.</p>}</AppCard><AppCard className="p-5"><h2 className="text-lg font-bold">Crear consulta</h2><form onSubmit={submit} className="mt-5 grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">Tema<select value={topic} onChange={event=>setTopic(event.target.value)} className="mt-2 h-11 w-full rounded-xl border px-3"><option>Movimientos</option><option>Presupuestos</option><option>Seguridad</option><option>Otro</option></select></label><label className="text-sm font-semibold">Asunto<input value={subject} onChange={event=>setSubject(event.target.value)} maxLength={80} className="mt-2 h-11 w-full rounded-xl border px-3"/></label><label className="text-sm font-semibold sm:col-span-2">Consulta<textarea value={message} onChange={event=>setMessage(event.target.value)} maxLength={1000} className="mt-2 min-h-28 w-full rounded-xl border p-3"/></label><button className="flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-800 font-bold text-white sm:col-start-2"><Send size={17}/>Enviar</button></form></AppCard></div><AppCard className="h-fit p-5"><h2 className="font-bold">Tus consultas</h2>{tickets.length?tickets.map(ticket=><Link key={ticket.id} href={`/${locale}/dashboard/soporte/${ticket.id}`} className="mt-3 block rounded-xl border p-3"><strong className="block text-sm">{ticket.subject}</strong><span className="text-xs text-slate-500">{ticket.status} · {ticket.createdAt}</span></Link>):<p className="mt-4 text-sm text-slate-500">Aún no tienes tickets.</p>}</AppCard></div></div>;
+"use client";
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import { BookOpen, Send } from "lucide-react";
+import { useFinance } from "@/entities/finance/model/FinanceProvider";
+import { financeApi } from "@/entities/finance/api/financeApi";
+import { AppCard } from "@/shared/components/AppCard";
+import { PageHeader } from "@/shared/components/PageHeader";
+type Entry = { id: string; title: string; content: string; category: string };
+export function Support({ locale }: { locale: "es" | "en" }) {
+  const { tickets, dispatch, isDemo } = useFinance();
+  const [entries, setEntries] = useState<Entry[]>([]);
+  const [topic, setTopic] = useState("Movimientos");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitLock = useRef(false);
+  useEffect(() => {
+    if (!isDemo)
+      void financeApi
+        .knowledgeBase()
+        .then(setEntries)
+        .catch((caught) =>
+          setStatus(
+            caught instanceof Error
+              ? caught.message
+              : "No pudimos cargar la ayuda.",
+          ),
+        );
+  }, [isDemo]);
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (submitLock.current) return;
+    if (subject.trim().length < 3 || message.trim().length < 10) {
+      setStatus("Completa un asunto y una consulta de al menos 10 caracteres.");
+      return;
+    }
+    submitLock.current = true;
+    setIsSubmitting(true);
+    try {
+      await dispatch({
+        type: "createTicket",
+        payload: {
+          subject: subject.trim(),
+          summary: message.trim(),
+          priority: topic === "Seguridad" ? "high" : "medium",
+        },
+      });
+      setSubject("");
+      setMessage("");
+      setStatus("Consulta creada correctamente.");
+    } catch (caught) {
+      setStatus(
+        caught instanceof Error
+          ? caught.message
+          : "No pudimos crear la consulta.",
+      );
+    } finally {
+      submitLock.current = false;
+      setIsSubmitting(false);
+    }
+  };
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Soporte"
+        subtitle="Consulta la base de conocimiento o contacta al equipo."
+      />
+      {status && (
+        <p role="status" className="rounded-xl bg-slate-50 p-3 text-sm">
+          {status}
+        </p>
+      )}
+      <div className="grid gap-4 xl:grid-cols-[1fr_20rem]">
+        <div className="space-y-4">
+          <AppCard className="p-5">
+            <h2 className="text-lg font-bold">Centro de ayuda</h2>
+            {entries.length ? (
+              <div className="mt-5 grid gap-3 md:grid-cols-2">
+                {entries.map((entry) => (
+                  <article key={entry.id} className="rounded-2xl border p-4">
+                    <BookOpen className="text-emerald-700" />
+                    <span className="mt-3 block text-xs font-bold uppercase text-slate-400">
+                      {entry.category}
+                    </span>
+                    <h3 className="mt-1 font-bold">{entry.title}</h3>
+                    <p className="mt-2 text-sm text-slate-600">
+                      {entry.content}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-4 text-sm text-slate-500">
+                No hay artículos publicados todavía.
+              </p>
+            )}
+          </AppCard>
+          <AppCard className="p-5">
+            <h2 className="text-lg font-bold">Crear consulta</h2>
+            <form onSubmit={submit} className="mt-5 grid gap-4 sm:grid-cols-2">
+              <label className="text-sm font-semibold">
+                Tema
+                <select
+                  value={topic}
+                  onChange={(event) => setTopic(event.target.value)}
+                  className="mt-2 h-11 w-full rounded-xl border px-3"
+                >
+                  <option>Movimientos</option>
+                  <option>Presupuestos</option>
+                  <option>Seguridad</option>
+                  <option>Otro</option>
+                </select>
+              </label>
+              <label className="text-sm font-semibold">
+                Asunto
+                <input
+                  value={subject}
+                  onChange={(event) => setSubject(event.target.value)}
+                  maxLength={80}
+                  className="mt-2 h-11 w-full rounded-xl border px-3"
+                />
+              </label>
+              <label className="text-sm font-semibold sm:col-span-2">
+                Consulta
+                <textarea
+                  value={message}
+                  onChange={(event) => setMessage(event.target.value)}
+                  maxLength={1000}
+                  className="mt-2 min-h-28 w-full rounded-xl border p-3"
+                />
+              </label>
+              <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-800 font-bold text-white disabled:cursor-not-allowed disabled:opacity-60 sm:col-start-2">
+                <Send size={17} />
+                {isSubmitting ? "Enviando…" : "Enviar"}
+              </button>
+            </form>
+          </AppCard>
+        </div>
+        <AppCard className="h-fit p-5">
+          <h2 className="font-bold">Tus consultas</h2>
+          {tickets.length ? (
+            tickets.map((ticket) => (
+              <Link
+                key={ticket.id}
+                href={`/${locale}/dashboard/soporte/${ticket.id}`}
+                className="mt-3 block rounded-xl border p-3"
+              >
+                <strong className="block text-sm">{ticket.subject}</strong>
+                <span className="text-xs text-slate-500">
+                  {ticket.status} · {ticket.createdAt}
+                </span>
+              </Link>
+            ))
+          ) : (
+            <p className="mt-4 text-sm text-slate-500">
+              Aún no tienes tickets.
+            </p>
+          )}
+        </AppCard>
+      </div>
+    </div>
+  );
 }

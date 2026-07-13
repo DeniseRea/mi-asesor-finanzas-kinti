@@ -1,14 +1,179 @@
-'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Check, FileSpreadsheet, Upload } from 'lucide-react';
-import { useFinance } from '@/entities/finance/model/FinanceProvider';
-import { AppCard } from '@/shared/components/AppCard';
+"use client";
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Check, FileSpreadsheet, Upload } from "lucide-react";
+import { useFinance } from "@/entities/finance/model/FinanceProvider";
+import { AppCard } from "@/shared/components/AppCard";
 
-type CsvRow = { accion: 'INGRESO'|'GASTO'; monto: number; categoria: string; entidad?: string; fecha?: string; descripcion?: string };
-export function ImportMovements({ locale }: { locale: 'es' | 'en' }) {
-  const [step,setStep]=useState(1); const [fileName,setFileName]=useState(''); const [rows,setRows]=useState<CsvRow[]>([]); const [invalid,setInvalid]=useState(0); const [error,setError]=useState(''); const {parseCsv,confirmCsv,formatMoney}=useFinance(); const router=useRouter();
-  const choose=async(file?:File)=>{if(!file||file.size>5*1024*1024)return;setError('');setFileName(file.name);try{const result=await parseCsv(await file.text());setRows(result.valid as CsvRow[]);setInvalid(result.error_count);setStep(2);}catch(caught){setError(caught instanceof Error?caught.message:'No pudimos leer el archivo.');}};
-  const confirm=async()=>{try{await confirmCsv(rows);setStep(3);}catch(caught){setError(caught instanceof Error?caught.message:'No pudimos importar los movimientos.');}};
-  return <div className="mx-auto max-w-4xl space-y-6"><div className="grid grid-cols-3 gap-2">{['Seleccionar','Revisar','Confirmar'].map((item,index)=><div key={item} className={`rounded-xl p-3 text-center text-xs font-bold ${step>=index+1?'bg-emerald-700 text-white':'bg-white text-slate-400'}`}>{index+1}. {item}</div>)}</div><AppCard className="p-5 sm:p-8">{error&&<p role="alert" className="mb-4 rounded-xl bg-rose-50 p-3 text-rose-700">{error}</p>}{step===1&&<div className="rounded-2xl border-2 border-dashed border-slate-200 p-10 text-center"><Upload className="mx-auto text-emerald-700" size={35}/><h2 className="mt-4 text-lg font-bold">Selecciona tu archivo CSV</h2><p className="mt-2 text-sm text-slate-500">Hasta 5 MB. Encabezados: monto, tipo, categoría, entidad, fecha y descripción.</p><label className="mt-6 inline-flex cursor-pointer rounded-xl bg-emerald-800 px-5 py-3 text-sm font-bold text-white">Elegir archivo<input type="file" accept=".csv,text/csv" className="hidden" onChange={(event)=>void choose(event.target.files?.[0])}/></label></div>}{step===2&&<><div className="mb-5 flex items-center gap-3 rounded-xl bg-emerald-50 p-4"><FileSpreadsheet className="text-emerald-700"/><span><strong className="block text-sm">{fileName}</strong><span className="text-slate-500">{rows.length} filas válidas · {invalid} errores</span></span></div><div className="overflow-x-auto"><table className="w-full min-w-[560px] text-left text-sm"><thead><tr className="border-b"><th className="p-3">Descripción</th><th>Categoría</th><th>Tipo</th><th className="text-right">Monto</th></tr></thead><tbody>{rows.map((item,index)=><tr key={`${index}-${item.entidad}`} className="border-b"><td className="p-3 font-semibold">{item.entidad??item.descripcion??'Sin descripción'}</td><td>{item.categoria}</td><td>{item.accion==='INGRESO'?'Ingreso':'Gasto'}</td><td className="text-right font-bold">{formatMoney(item.monto)}</td></tr>)}</tbody></table></div><div className="mt-6 flex justify-end gap-2"><button onClick={()=>setStep(1)} className="rounded-xl border px-4 py-2">Cambiar archivo</button><button disabled={!rows.length} onClick={()=>void confirm()} className="rounded-xl bg-emerald-800 px-5 py-2 font-bold text-white disabled:opacity-50">Importar {rows.length} movimientos</button></div></>}{step===3&&<div className="py-10 text-center"><span className="mx-auto grid size-16 place-items-center rounded-full bg-emerald-100 text-emerald-700"><Check/></span><h2 className="mt-4 text-2xl font-bold">Importación completada</h2><p className="mt-2 text-slate-500">Los movimientos ya forman parte de tu resumen.</p><button onClick={()=>router.push(`/${locale}/dashboard/movimientos`)} className="mt-6 rounded-xl bg-emerald-800 px-5 py-3 font-bold text-white">Ver movimientos</button></div>}</AppCard></div>;
+type CsvRow = {
+  accion: "INGRESO" | "GASTO";
+  monto: number;
+  categoria: string;
+  entidad?: string;
+  fecha?: string;
+  descripcion?: string;
+};
+export function ImportMovements({ locale }: { locale: "es" | "en" }) {
+  const [step, setStep] = useState(1);
+  const [fileName, setFileName] = useState("");
+  const [rows, setRows] = useState<CsvRow[]>([]);
+  const [invalid, setInvalid] = useState(0);
+  const [error, setError] = useState("");
+  const [isConfirming, setIsConfirming] = useState(false);
+  const confirmLock = useRef(false);
+  const { parseCsv, confirmCsv, formatMoney } = useFinance();
+  const router = useRouter();
+  const choose = async (file?: File) => {
+    if (!file || file.size > 5 * 1024 * 1024) return;
+    setError("");
+    setFileName(file.name);
+    try {
+      const result = await parseCsv(await file.text());
+      setRows(result.valid as CsvRow[]);
+      setInvalid(result.error_count);
+      setStep(2);
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "No pudimos leer el archivo.",
+      );
+    }
+  };
+  const confirm = async () => {
+    if (confirmLock.current || !rows.length) return;
+    confirmLock.current = true;
+    setIsConfirming(true);
+    setError("");
+    try {
+      await confirmCsv(rows);
+      setStep(3);
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "No pudimos importar los movimientos.",
+      );
+    } finally {
+      confirmLock.current = false;
+      setIsConfirming(false);
+    }
+  };
+  return (
+    <div className="mx-auto max-w-4xl space-y-6">
+      <div className="grid grid-cols-3 gap-2">
+        {["Seleccionar", "Revisar", "Confirmar"].map((item, index) => (
+          <div
+            key={item}
+            className={`rounded-xl p-3 text-center text-xs font-bold ${step >= index + 1 ? "bg-emerald-700 text-white" : "bg-white text-slate-400"}`}
+          >
+            {index + 1}. {item}
+          </div>
+        ))}
+      </div>
+      <AppCard className="p-5 sm:p-8">
+        {error && (
+          <p
+            role="alert"
+            className="mb-4 rounded-xl bg-rose-50 p-3 text-rose-700"
+          >
+            {error}
+          </p>
+        )}
+        {step === 1 && (
+          <div className="rounded-2xl border-2 border-dashed border-slate-200 p-10 text-center">
+            <Upload className="mx-auto text-emerald-700" size={35} />
+            <h2 className="mt-4 text-lg font-bold">
+              Selecciona tu archivo CSV
+            </h2>
+            <p className="mt-2 text-sm text-slate-500">
+              Hasta 5 MB. Encabezados: monto, tipo, categoría, entidad, fecha y
+              descripción.
+            </p>
+            <label className="mt-6 inline-flex cursor-pointer rounded-xl bg-emerald-800 px-5 py-3 text-sm font-bold text-white">
+              Elegir archivo
+              <input
+                type="file"
+                accept=".csv,text/csv"
+                className="hidden"
+                onChange={(event) => void choose(event.target.files?.[0])}
+              />
+            </label>
+          </div>
+        )}
+        {step === 2 && (
+          <>
+            <div className="mb-5 flex items-center gap-3 rounded-xl bg-emerald-50 p-4">
+              <FileSpreadsheet className="text-emerald-700" />
+              <span>
+                <strong className="block text-sm">{fileName}</strong>
+                <span className="text-slate-500">
+                  {rows.length} filas válidas · {invalid} errores
+                </span>
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[560px] text-left text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="p-3">Descripción</th>
+                    <th>Categoría</th>
+                    <th>Tipo</th>
+                    <th className="text-right">Monto</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((item, index) => (
+                    <tr key={`${index}-${item.entidad}`} className="border-b">
+                      <td className="p-3 font-semibold">
+                        {item.entidad ?? item.descripcion ?? "Sin descripción"}
+                      </td>
+                      <td>{item.categoria}</td>
+                      <td>{item.accion === "INGRESO" ? "Ingreso" : "Gasto"}</td>
+                      <td className="text-right font-bold">
+                        {formatMoney(item.monto)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-6 flex justify-end gap-2">
+              <button
+                onClick={() => setStep(1)}
+                className="rounded-xl border px-4 py-2"
+              >
+                Cambiar archivo
+              </button>
+              <button
+                disabled={!rows.length || isConfirming}
+                aria-busy={isConfirming}
+                onClick={() => void confirm()}
+                className="rounded-xl bg-emerald-800 px-5 py-2 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isConfirming ? "Importando…" : `Importar ${rows.length} movimientos`}
+              </button>
+            </div>
+          </>
+        )}
+        {step === 3 && (
+          <div className="py-10 text-center">
+            <span className="mx-auto grid size-16 place-items-center rounded-full bg-emerald-100 text-emerald-700">
+              <Check />
+            </span>
+            <h2 className="mt-4 text-2xl font-bold">Importación completada</h2>
+            <p className="mt-2 text-slate-500">
+              Los movimientos ya forman parte de tu resumen.
+            </p>
+            <button
+              onClick={() => router.push(`/${locale}/dashboard/movimientos`)}
+              className="mt-6 rounded-xl bg-emerald-800 px-5 py-3 font-bold text-white"
+            >
+              Ver movimientos
+            </button>
+          </div>
+        )}
+      </AppCard>
+    </div>
+  );
 }

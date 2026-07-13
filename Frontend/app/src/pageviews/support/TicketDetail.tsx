@@ -1,7 +1,92 @@
-'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft,Clock,ShieldAlert,Send } from 'lucide-react';
-import { useFinance } from '@/entities/finance/model/FinanceProvider';
-import { AppCard } from '@/shared/components/AppCard';
-export function TicketDetail({id}:{id:string}){const {tickets,addTicketMessage}=useFinance();const router=useRouter();const ticket=tickets.find(item=>item.id===id);const [text,setText]=useState('');const [error,setError]=useState('');if(!ticket)return <AppCard className="p-10 text-center">Ticket no encontrado.</AppCard>;const submit=async(event:React.FormEvent)=>{event.preventDefault();if(text.trim().length<2)return;try{await addTicketMessage(id,text.trim());setText('');}catch(caught){setError(caught instanceof Error?caught.message:'No pudimos enviar el mensaje.');}};return <div className="mx-auto max-w-4xl space-y-5"><button onClick={()=>router.back()} className="flex gap-2"><ArrowLeft/>Volver</button><AppCard className="p-6"><span className="text-sm font-bold text-emerald-700">#{ticket.id}</span><h1 className="mt-2 text-2xl font-black">{ticket.subject}</h1><p className="mt-2 text-slate-500">{ticket.summary}</p></AppCard><AppCard className="p-6"><h2 className="font-bold">Historial</h2><div className="mt-5 space-y-5">{ticket.messages.length?ticket.messages.map(message=><div key={message.id} className="flex gap-3"><span className="grid size-9 place-items-center rounded-full bg-slate-50">{message.author==='support'?<ShieldAlert/>:<Clock/>}</span><div className="rounded-2xl bg-slate-50 p-4"><strong>{message.author==='support'?'Soporte Kinti':'Tú'}</strong><p className="mt-2">{message.text}</p><small>{message.date}</small></div></div>):<p className="text-sm text-slate-500">El equipo revisará tu consulta.</p>}</div><form onSubmit={submit} className="mt-6 flex gap-2"><input value={text} onChange={event=>setText(event.target.value)} maxLength={1000} placeholder="Añadir mensaje" className="min-w-0 flex-1 rounded-xl border px-3"/><button className="grid size-11 place-items-center rounded-xl bg-emerald-800 text-white"><Send size={18}/></button></form>{error&&<p className="mt-3 text-rose-700">{error}</p>}</AppCard></div>}
+"use client";
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft, Clock, ShieldAlert, Send } from "lucide-react";
+import { useFinance } from "@/entities/finance/model/FinanceProvider";
+import { AppCard } from "@/shared/components/AppCard";
+export function TicketDetail({ id }: { id: string }) {
+  const { tickets, addTicketMessage } = useFinance();
+  const router = useRouter();
+  const ticket = tickets.find((item) => item.id === id);
+  const [text, setText] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const submitLock = useRef(false);
+  if (!ticket)
+    return (
+      <AppCard className="p-10 text-center">Ticket no encontrado.</AppCard>
+    );
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (submitLock.current) return;
+    if (text.trim().length < 2) return;
+    submitLock.current = true;
+    setIsSubmitting(true);
+    setError("");
+    try {
+      await addTicketMessage(id, text.trim());
+      setText("");
+    } catch (caught) {
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "No pudimos enviar el mensaje.",
+      );
+    } finally {
+      submitLock.current = false;
+      setIsSubmitting(false);
+    }
+  };
+  return (
+    <div className="mx-auto max-w-4xl space-y-5">
+      <button onClick={() => router.back()} className="flex gap-2">
+        <ArrowLeft />
+        Volver
+      </button>
+      <AppCard className="p-6">
+        <span className="text-sm font-bold text-emerald-700">#{ticket.id}</span>
+        <h1 className="mt-2 text-2xl font-black">{ticket.subject}</h1>
+        <p className="mt-2 text-slate-500">{ticket.summary}</p>
+      </AppCard>
+      <AppCard className="p-6">
+        <h2 className="font-bold">Historial</h2>
+        <div className="mt-5 space-y-5">
+          {ticket.messages.length ? (
+            ticket.messages.map((message) => (
+              <div key={message.id} className="flex gap-3">
+                <span className="grid size-9 place-items-center rounded-full bg-slate-50">
+                  {message.author === "support" ? <ShieldAlert /> : <Clock />}
+                </span>
+                <div className="rounded-2xl bg-slate-50 p-4">
+                  <strong>
+                    {message.author === "support" ? "Soporte Kinti" : "Tú"}
+                  </strong>
+                  <p className="mt-2">{message.text}</p>
+                  <small>{message.date}</small>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-sm text-slate-500">
+              El equipo revisará tu consulta.
+            </p>
+          )}
+        </div>
+        <form onSubmit={submit} className="mt-6 flex gap-2">
+          <input
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            disabled={isSubmitting}
+            maxLength={1000}
+            placeholder="Añadir mensaje"
+            className="min-w-0 flex-1 rounded-xl border px-3"
+          />
+          <button type="submit" disabled={isSubmitting} aria-busy={isSubmitting} className="grid size-11 place-items-center rounded-xl bg-emerald-800 text-white disabled:cursor-not-allowed disabled:opacity-60">
+            <Send size={18} />
+          </button>
+        </form>
+        {error && <p className="mt-3 text-rose-700">{error}</p>}
+      </AppCard>
+    </div>
+  );
+}

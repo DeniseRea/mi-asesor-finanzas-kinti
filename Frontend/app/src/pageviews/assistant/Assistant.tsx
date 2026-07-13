@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Bot, Lightbulb, LoaderCircle, Send, Sparkles } from 'lucide-react';
 import { useFinance } from '@/entities/finance/model/FinanceProvider';
 import { AppCard } from '@/shared/components/AppCard';
@@ -9,11 +9,13 @@ export function Assistant() {
   const { messages, summary, budgets, expensesByCategory, formatMoney, sendAssistantMessage, isDemo } = useFinance();
   const [text, setText] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const sendLock = useRef(false);
   const [error, setError] = useState('');
 
   const send = async () => {
     const clean = text.trim().slice(0, 300);
-    if (!clean || isSending) return;
+    if (!clean || sendLock.current) return;
+    sendLock.current = true;
     setText('');
     setError('');
     setIsSending(true);
@@ -22,6 +24,7 @@ export function Assistant() {
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'No fue posible procesar el mensaje.');
     } finally {
+      sendLock.current = false;
       setIsSending(false);
     }
   };

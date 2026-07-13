@@ -7,6 +7,7 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
@@ -164,6 +165,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
   const [state, localDispatch] = useReducer(reducer, initialState);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const mutationLocks = useRef(new Set<string>());
   const { user } = useAuth();
   const isDemo = user?.id === 'demo-user';
 
@@ -211,6 +213,10 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         return;
       }
 
+      const mutationKey = JSON.stringify(action);
+      if (mutationLocks.current.has(mutationKey)) return;
+      mutationLocks.current.add(mutationKey);
+
       setError(null);
       try {
         switch (action.type) {
@@ -252,6 +258,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
         const message = caught instanceof Error ? caught.message : 'No se pudo guardar el cambio.';
         setError(message);
         throw caught;
+      } finally {
+        mutationLocks.current.delete(mutationKey);
       }
     },
     [isDemo, refresh, state.budgets, state.notifications, user],
