@@ -10,6 +10,8 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 import { KintiWebhookDto } from './dto/kinti-webhook.dto';
 import { AlertsService } from '../alerts/alerts.service';
+import { BudgetsService } from '../budgets/budgets.service';
+import { SupportService } from '../support/support.service';
 
 @Injectable()
 export class KintiService {
@@ -19,6 +21,8 @@ export class KintiService {
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
     private readonly alertsService: AlertsService,
+    private readonly budgetsService: BudgetsService,
+    private readonly supportService: SupportService,
   ) {}
 
   /**
@@ -204,5 +208,106 @@ export class KintiService {
       orderBy: { createdAt: 'asc' },
       take: 100,
     });
+  }
+
+  async procesarCallbackPresupuesto(dto: any): Promise<void> {
+    this.logger.log(`Recibido callback PRESUPUESTO de n8n para usuario ${dto.usuario_id}`);
+    try {
+      const request = dto.request_id 
+        ? await this.prisma.aiRequest.findUnique({ where: { id: dto.request_id } })
+        : await this.prisma.aiRequest.findFirst({ where: { userId: dto.usuario_id, status: 'processing' }, orderBy: { createdAt: 'desc' } });
+      
+      if (!request || request.userId !== dto.usuario_id) throw new NotFoundException('Solicitud de IA no encontrada');
+      if (request.status === 'completed') return;
+
+      const processed = await this.prisma.$transaction(async (tx) => {
+        const claim = await tx.aiRequest.updateMany({
+          where: { id: request.id, userId: dto.usuario_id, status: 'processing' },
+          data: { status: 'completing' },
+        });
+        if (claim.count === 0) return false;
+
+        // If creating budget
+        if (dto.accion === 'CREAR_PRESUPUESTO' && dto.datos) {
+          // Check if it already exists for this category/month/year to update or create
+          const existing = await tx.budget.findFirst({
+            where: { userId: dto.usuario_id, category: dto.datos.categoria, month: dto.datos.mes, year: dto.datos.anio }
+          });
+          if (existing) {
+            await tx.budget.update({
+              where: { id: existing.id },
+              data: { amount: dto.datos.monto, threshold: dto.datos.umbral || 80 }
+            });
+          } else {
+            await tx.budget.create({
+              data: {
+                userId: dto.usuario_id,
+                category: dto.datos.categoria,
+                amount: dto.datos.monto,
+                month: dto.datos.mes,
+                year: dto.datos.anio,
+                threshold: dto.datos.umbral || 80,
+              }
+            });
+          }
+        }
+
+        await tx.aiRequest.update({
+          where: { id: request.id },
+          data: {
+            status: 'completed',
+            responseText: dto.respuesta_chat,
+            completedAt: new Date(),
+          },
+        });
+        return true;
+      });
+    } catch (error: any) {
+      this.logger.error(`Error procesando callback de presupuesto: ${error.message}`);
+    }
+  }
+
+  async procesarCallbackSoporte(dto: any): Promise<void> {
+    this.logger.log(`Recibido callback SOPORTE de n8n para usuario ${dto.usuario_id}`);
+    try {
+      const request = dto.request_id 
+        ? await this.prisma.aiRequest.findUnique({ where: { id: dto.request_id } })
+        : await this.prisma.aiRequest.findFirst({ where: { userId: dto.usuario_id, status: 'processing' }, orderBy: { createdAt: 'desc' } });
+      
+      if (!request || request.userId !== dto.usuario_id) throw new NotFoundException('Solicitud de IA no encontrada');
+      if (request.status === 'completed') return;
+
+      const processed = await this.prisma.$transaction(async (tx) => {
+        const claim = await tx.aiRequest.updateMany({
+          where: { id: request.id, userId: dto.usuario_id, status: 'processing' },
+          data: { status: 'completing' },
+        });
+        if (claim.count === 0) return false;
+
+        if (dto.accion === 'TICKET' && dto.datos) {
+          await tx.ticket.create({
+            data: {
+              userId: dto.usuario_id,
+              subject: dto.datos.asunto,
+              priority: dto.datos.prioridad || 'media',
+              context: dto.respuesta_chat,
+              status: 'abierto',
+            }
+          });
+        }
+
+        await tx.aiRequest.update({
+          where: { id: request.id },
+          data: {
+            status: 'completed',
+            responseText: dto.respuesta_chat,
+            completedAt: new Date(),
+          },
+        });
+        return true;
+      });
+    } catch (error: any) {
+      this.logger.error(`Error procesando callback de soporte: ${error.message}`);
+    }
   }
 }

@@ -91,4 +91,36 @@ export class KintiController {
 
     return { success: true, message: 'Callback recibido correctamente' };
   }
+
+  @Post('budgets/webhook')
+  @HttpCode(HttpStatus.OK)
+  async recibirCallbackPresupuestos(
+    @Body() payload: any,
+    @Req() request: Request,
+  ) {
+    const webhookSecret = process.env.N8N_WEBHOOK_SECRET;
+    const clientSecret = request.headers['x-kinti-secret'];
+    if (!webhookSecret || clientSecret !== webhookSecret) throw new UnauthorizedException('Secret de webhook inválido');
+
+    this.kintiService.procesarCallbackPresupuesto(payload).catch((err) => {
+      console.error('Error procesando callback de presupuesto', err);
+    });
+    return { success: true, message: 'Callback recibido correctamente' };
+  }
+
+  @Post('support/webhook')
+  @HttpCode(HttpStatus.OK)
+  async recibirCallbackSoporte(
+    @Body() payload: any,
+    @Req() request: Request,
+  ) {
+    const webhookSecret = process.env.N8N_WEBHOOK_SECRET;
+    const clientSecret = request.headers['x-kinti-secret'];
+    if (!webhookSecret || clientSecret !== webhookSecret) throw new UnauthorizedException('Secret de webhook inválido');
+
+    this.kintiService.procesarCallbackSoporte(payload).catch((err) => {
+      console.error('Error procesando callback de soporte', err);
+    });
+    return { success: true, message: 'Callback recibido correctamente' };
+  }
 }
