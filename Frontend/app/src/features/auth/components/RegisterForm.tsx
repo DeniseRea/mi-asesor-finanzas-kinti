@@ -182,7 +182,7 @@ export function RegisterForm({ dict, locale }: RegisterFormProps) {
 
         <label className="flex cursor-pointer items-start gap-2.5 text-xs leading-relaxed text-slate-600 sm:text-sm">
           <input type="checkbox" required className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-[#075b40]" />
-          <span>{dict.accept} <a href="#" className="font-semibold text-[#075b40] hover:underline">{dict.terms}</a> {dict.and} <a href="#" className="font-semibold text-[#075b40] hover:underline">{dict.privacy}</a>.</span>
+          <span>{dict.accept} <Link href={locale === 'es' ? '/es/terminos' : '/en/terms'} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#075b40] hover:underline">{dict.terms}</Link> {dict.and} <Link href={locale === 'es' ? '/es/privacidad' : '/en/privacy'} target="_blank" rel="noopener noreferrer" className="font-semibold text-[#075b40] hover:underline">{dict.privacy}</Link>.</span>
         </label>
 
         <button type="submit" disabled={isSubmitting} className="relative flex min-h-12 w-full items-center justify-center rounded-xl bg-[#075b40] px-5 text-sm font-semibold text-white shadow-[0_8px_20px_rgba(7,91,64,0.2)] transition hover:bg-[#064c36] active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#075b40] disabled:opacity-60 disabled:cursor-not-allowed">

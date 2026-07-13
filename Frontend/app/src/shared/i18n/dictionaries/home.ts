@@ -72,6 +72,7 @@ export interface HomeDictionary {
   finalTitle: string;
   finalSubtitle: string;
   footerCopyright: string;
+  footerTerms: string;
   footerPrivacy: string;
 }
 
@@ -134,6 +135,7 @@ const homeDictionaries: Record<Locale, HomeDictionary> = {
     finalTitle: 'Empieza hoy a sentir el control.',
     finalSubtitle: 'Entra a la demo con datos preparados o crea tu espacio personal cuando estés listo.',
     footerCopyright: '© 2026 Kinti · Tecnología para tu bienestar financiero.',
+    footerTerms: 'Términos',
     footerPrivacy: 'Privacidad',
   },
   en: {
@@ -194,6 +196,7 @@ const homeDictionaries: Record<Locale, HomeDictionary> = {
     finalTitle: 'Start feeling in control today.',
     finalSubtitle: 'Enter the prepared demo or create your personal space when you are ready.',
     footerCopyright: '© 2026 Kinti · Technology for your financial wellbeing.',
+    footerTerms: 'Terms',
     footerPrivacy: 'Privacy',
   },
 };

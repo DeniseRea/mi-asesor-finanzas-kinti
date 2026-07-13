@@ -22,7 +22,6 @@ import {
 } from "lucide-react";
 import type { HomeDictionary } from "@/shared/i18n/dictionaries/home";
 import { useAuth } from "@/shared/lib/auth-context";
-import { useFinance } from "@/entities/finance/model/FinanceProvider";
 import { Hero } from "./components/Hero";
 import { LandingNav } from "./components/LandingNav";
 import { Reveal } from "./components/Reveal";
@@ -36,10 +35,24 @@ export function Home({ dict, locale }: HomeProps) {
   const router = useRouter();
   const { enterDemo } = useAuth();
   const [progress, setProgress] = useState(0);
-  const { preferences, dispatch } = useFinance();
+  const [darkMode, setDarkMode] = useState(false);
   const openDemo = () => {
     enterDemo();
     router.push(`/${locale}/dashboard`);
+  };
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("kinti_landing_theme");
+    const enabled = storedTheme
+      ? storedTheme === "dark"
+      : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    queueMicrotask(() => setDarkMode(enabled));
+  }, []);
+  const toggleTheme = () => {
+    setDarkMode((current) => {
+      const next = !current;
+      localStorage.setItem("kinti_landing_theme", next ? "dark" : "light");
+      return next;
+    });
   };
   useEffect(() => {
     const update = () => {
@@ -63,7 +76,7 @@ export function Home({ dict, locale }: HomeProps) {
     { icon: BarChart3, tone: "from-violet-50 to-blue-50 text-violet-800" },
   ];
   return (
-    <div className={preferences.darkMode ? "dark" : ""}>
+    <div className={darkMode ? "dark" : ""}>
       <div className="landing-page min-h-screen overflow-x-clip bg-[#f7faf5] text-slate-950 [--font-display:'Iowan_Old_Style','Palatino_Linotype',Georgia,serif] dark:bg-[#06150f] dark:text-slate-100">
         <div
           aria-hidden="true"
@@ -73,13 +86,8 @@ export function Home({ dict, locale }: HomeProps) {
         <LandingNav
           dict={dict}
           locale={locale}
-          darkMode={preferences.darkMode}
-          onThemeAction={() =>
-            dispatch({
-              type: "updatePreferences",
-              payload: { darkMode: !preferences.darkMode },
-            })
-          }
+          darkMode={darkMode}
+          onThemeAction={toggleTheme}
           onDemoAction={openDemo}
         />
         <Hero dict={dict} locale={locale} onDemoAction={openDemo} />
@@ -458,17 +466,23 @@ export function Home({ dict, locale }: HomeProps) {
             <p className="text-center text-sm text-slate-500">
               {dict.footerCopyright}
             </p>
-            <div className="flex gap-5 text-sm font-semibold text-slate-500">
-              <button
-                type="button"
-                onClick={() =>
-                  document
-                    .getElementById("seguridad")
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" })
-                }
+            <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm font-semibold text-slate-500">
+              <Link
+                href={locale === "es" ? "/es/terminos" : "/en/terms"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-emerald-800 hover:underline"
+              >
+                {dict.footerTerms}
+              </Link>
+              <Link
+                href={locale === "es" ? "/es/privacidad" : "/en/privacy"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-emerald-800 hover:underline"
               >
                 {dict.footerPrivacy}
-              </button>
+              </Link>
               <Link href={`/${locale}/login`}>{dict.login}</Link>
             </div>
           </div>
