@@ -1,36 +1,42 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private transporter: nodemailer.Transporter | null = null;
+  private readonly from: string;
 
   constructor() {
     const user = process.env.SMTP_EMAIL;
     const pass = process.env.SMTP_PASSWORD;
-
-    if (user && pass) {
-      this.transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: { user, pass },
-      });
-    } else {
-      this.logger.warn(
-        'SMTP_EMAIL/SMTP_PASSWORD no configurados. Los emails no se enviarán.',
+    const service = process.env.SMTP_SERVICE;
+    if (!user || !pass || !service) {
+      throw new Error(
+        'SMTP_EMAIL, SMTP_PASSWORD y SMTP_SERVICE son obligatorias',
       );
     }
+
+    this.from = process.env.SMTP_FROM?.trim() || `"Kinti" <${user}>`;
+
+    this.transporter = nodemailer.createTransport({
+      service,
+      auth: { user, pass },
+    });
   }
 
   async sendVerificationCode(email: string, code: string): Promise<void> {
     if (!this.transporter) {
-      this.logger.warn(`[DEV] Código de verificación para ${email}: ${code}`);
-      return;
+      throw new ServiceUnavailableException('SMTP no está configurado');
     }
 
     try {
       await this.transporter.sendMail({
-        from: '"Kinti" <kinti.app@gmail.com>',
+        from: this.from,
         to: email,
         subject: 'Verifica tu cuenta de Kinti',
         html: `
@@ -54,17 +60,18 @@ export class EmailService {
       this.logger.log(`Email de verificación enviado a ${email}`);
     } catch (error) {
       this.logger.error(`Error al enviar email a ${email}: ${error.message}`);
-      this.logger.warn(`[DEV] Código de verificación para ${email}: ${code}`);
+      throw new ServiceUnavailableException(
+        'No se pudo enviar el correo de verificación',
+      );
     }
   }
 
   async sendPasswordResetCode(email: string, code: string): Promise<void> {
     if (!this.transporter) {
-      this.logger.warn(`[DEV] Código de recuperación para ${email}: ${code}`);
-      return;
+      throw new ServiceUnavailableException('SMTP no está configurado');
     }
     await this.transporter.sendMail({
-      from: '"Kinti" <kinti.app@gmail.com>',
+      from: this.from,
       to: email,
       subject: 'Recupera tu contraseña de Kinti',
       html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:32px"><h2 style="color:#075b40">Recupera tu contraseña</h2><p>Usa este código de un solo uso:</p><p style="font-size:36px;font-weight:bold;letter-spacing:8px">${code}</p><p>Expira en 15 minutos. Si no solicitaste el cambio, ignora este mensaje.</p></div>`,

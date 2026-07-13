@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
@@ -9,10 +10,19 @@ import { EmailService } from './email.service';
 @Module({
   imports: [
     PassportModule,
-    JwtModule.register({
+    JwtModule.registerAsync({
       global: true,
-      secret: process.env.JWT_SECRET || 'kinti-hackathon-2026-secret-key',
-      signOptions: { expiresIn: '7d' },
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const secret = configService.get<string>('JWT_SECRET');
+        if (!secret) {
+          throw new Error('JWT_SECRET es obligatoria');
+        }
+        return {
+          secret,
+          signOptions: { expiresIn: '7d' as const },
+        };
+      },
     }),
   ],
   controllers: [AuthController],

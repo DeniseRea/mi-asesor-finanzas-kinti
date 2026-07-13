@@ -1,4 +1,8 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001';
+const configuredBaseUrl = process.env.NEXT_PUBLIC_API_URL;
+if (!configuredBaseUrl?.trim()) {
+  throw new Error('NEXT_PUBLIC_API_URL es obligatoria');
+}
+const BASE_URL = configuredBaseUrl.replace(/\/+$/, '');
 const TOKEN_KEY = 'kinti_token';
 const DEFAULT_TIMEOUT_MS = 15_000;
 
